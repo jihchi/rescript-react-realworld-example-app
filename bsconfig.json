@@ -8,7 +8,8 @@
     "subdirs": [
       { "dir": "page" },
       { "dir": "component" },
-      { "dir": "shared" }
+      { "dir": "shared" },
+      { "dir": "__tests__", "type": "dev" }
     ]
   },
   "bsc-flags": ["-bs-super-errors", "-bs-no-version-header"],
