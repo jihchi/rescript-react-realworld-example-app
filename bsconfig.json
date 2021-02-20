@@ -22,10 +22,11 @@
   "suffix": ".bs.js",
   "namespace": true,
   "bs-dependencies": [
+    "@rescript/react",
+    "@ryyppy/rescript-promise",
     "bs-bastet",
     "bs-decode",
     "bs-fetch",
-    "@rescript/react",
     "bs-webapi",
     "relude"
   ],
