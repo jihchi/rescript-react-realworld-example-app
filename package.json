@@ -25,8 +25,8 @@
   "dependencies": {
     "@rescript/react": "^0.10.1",
     "@ryyppy/rescript-promise": "^2.0.0",
-    "dompurify": "^2.2.3",
-    "marked": "^2.0.0",
+    "dompurify": "^2.2.7",
+    "marked": "^2.0.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   },
@@ -36,13 +36,13 @@
     "@snowpack/plugin-run-script": "^2.3.0",
     "@snowpack/web-test-runner-plugin": "^0.2.1",
     "@testing-library/react": "^11.2.5",
-    "@web/test-runner": "^0.12.15",
+    "@web/test-runner": "^0.12.16",
     "bs-bastet": "^1.2.5",
     "bs-decode": "^0.11.2",
     "bs-fetch": "^0.6.2",
-    "bs-platform": "^9.0.1",
+    "bs-platform": "^9.0.2",
     "bs-webapi": "^0.19.1",
-    "chai": "^4.3.0",
+    "chai": "^4.3.4",
     "prettier": "^2.2.1",
     "relude": "^0.65.0",
     "snowpack": "^3.0.13"
