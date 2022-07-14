@@ -391,8 +391,8 @@ let useDeleteArticle: (
       () =>
         if (
           Webapi.Dom.Window.confirm(
-            "Are you sure you want to delete this article?",
             Webapi.Dom.window,
+            "Are you sure you want to delete this article?",
           )
         ) {
           sendRequest()
