@@ -26,7 +26,7 @@
     "@rescript/react",
     "@ryyppy/rescript-promise",
     "bs-fetch",
-    "bs-webapi"
+    "rescript-webapi"
   ],
   "bs-dev-dependencies": []
 }
