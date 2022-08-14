@@ -1,5 +1,3 @@
-module Option = Belt.Option
-
 let authenticated: (Shape.User.t => React.element, option<Shape.User.t>) => React.element = (
   getPage,
   user,
@@ -18,7 +16,8 @@ let make = () => {
 
   switch currentUser {
   | Init | Loading => React.null
-  | Reloading(user) | Complete(user) => <>
+  | Reloading(user) | Complete(user) =>
+    <>
       <Header user />
       {switch route {
       | Settings => authenticated(user => <Settings user setUser=setCurrentUser />, user)

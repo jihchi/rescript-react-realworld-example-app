@@ -37,7 +37,7 @@ let make = (
                     let image = ReactEvent.Form.target(event)["value"]
                     setResult(prev =>
                       prev->AsyncData.map(((use: Shape.User.t, password, error)) => (
-                        {...use, image: image},
+                        {...use, image},
                         password,
                         error,
                       ))
@@ -56,7 +56,7 @@ let make = (
                     let username = ReactEvent.Form.target(event)["value"]
                     setResult(prev =>
                       prev->AsyncData.map(((user: Shape.User.t, password, error)) => (
-                        {...user, username: username},
+                        {...user, username},
                         password,
                         error,
                       ))
@@ -75,7 +75,7 @@ let make = (
                     let bio = ReactEvent.Form.target(event)["value"]
                     setResult(prev =>
                       prev->AsyncData.map(((user: Shape.User.t, password, error)) => (
-                        {...user, bio: bio},
+                        {...user, bio},
                         password,
                         error,
                       ))
@@ -94,7 +94,7 @@ let make = (
                     let email = ReactEvent.Form.target(event)["value"]
                     setResult(prev =>
                       prev->AsyncData.map(((user: Shape.User.t, password, error)) => (
-                        {...user, email: email},
+                        {...user, email},
                         password,
                         error,
                       ))
@@ -130,10 +130,11 @@ let make = (
                     ->Promise.then(res => {
                       switch res {
                       | Ok(user) =>
-                        setResult(prev =>
-                          prev
-                          ->AsyncData.toIdle
-                          ->AsyncData.map(((_user, _password, _error)) => (user, "", None))
+                        setResult(
+                          prev =>
+                            prev
+                            ->AsyncData.toIdle
+                            ->AsyncData.map(((_user, _password, _error)) => (user, "", None)),
                         )
                         setUser(prev => prev->AsyncData.map(_prev => Some(user)))
                       | Error(AppError.Fetch((_code, _message, #json(json)))) =>
@@ -147,14 +148,13 @@ let make = (
                             ->Shape.Settings.decode
                           switch result {
                           | Ok(errors) =>
-                            setResult(prev =>
-                              prev
-                              ->AsyncData.toIdle
-                              ->AsyncData.map(((user, _password, _error)) => (
-                                user,
-                                "",
-                                Some(errors),
-                              ))
+                            setResult(
+                              prev =>
+                                prev
+                                ->AsyncData.toIdle
+                                ->AsyncData.map(
+                                  ((user, _password, _error)) => (user, "", Some(errors)),
+                                ),
                             )
                           | Error(_e) => ignore()
                           }

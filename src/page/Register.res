@@ -42,7 +42,7 @@ let make = (~setUser) => {
                 onChange={event => {
                   let username = ReactEvent.Form.target(event)["value"]
                   setData(prev =>
-                    prev->AsyncData.map(((form, error)) => ({...form, username: username}, error))
+                    prev->AsyncData.map(((form, error)) => ({...form, username}, error))
                   )
                 }}
               />
@@ -56,9 +56,7 @@ let make = (~setUser) => {
                 value=form.email
                 onChange={event => {
                   let email = ReactEvent.Form.target(event)["value"]
-                  setData(prev =>
-                    prev->AsyncData.map(((form, error)) => ({...form, email: email}, error))
-                  )
+                  setData(prev => prev->AsyncData.map(((form, error)) => ({...form, email}, error)))
                 }}
               />
             </fieldset>
@@ -72,7 +70,7 @@ let make = (~setUser) => {
                 onChange={event => {
                   let password = ReactEvent.Form.target(event)["value"]
                   setData(prev =>
-                    prev->AsyncData.map(((form, error)) => ({...form, password: password}, error))
+                    prev->AsyncData.map(((form, error)) => ({...form, password}, error))
                   )
                 }}
               />

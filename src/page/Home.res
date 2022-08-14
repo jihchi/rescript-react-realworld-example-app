@@ -77,7 +77,9 @@ let make = (~user: option<Shape.User.t>) => {
                 | Global(_) | Personal(_) => React.null
                 }}
                 {if articles->AsyncResult.isBusy {
-                  <li className="nav-item"> <Spinner /> </li>
+                  <li className="nav-item">
+                    <Spinner />
+                  </li>
                 } else {
                   React.null
                 }}

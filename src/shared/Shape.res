@@ -41,10 +41,10 @@ module Author = {
       let following = obj->Dict.get("following")->Option.flatMap(Json.decodeBoolean)
 
       Result.Ok({
-        username: username,
-        bio: bio,
-        image: image,
-        following: following,
+        username,
+        bio,
+        image,
+        following,
       })
     } catch {
     | _ => Error("Shape.Author: failed to decode json")
@@ -111,16 +111,16 @@ module Article = {
         ->Option.getExn
 
       Result.Ok({
-        slug: slug,
-        title: title,
-        description: description,
-        body: body,
-        tagList: tagList,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-        favorited: favorited,
-        favoritesCount: favoritesCount,
-        author: author,
+        slug,
+        title,
+        description,
+        body,
+        tagList,
+        createdAt,
+        updatedAt,
+        favorited,
+        favoritesCount,
+        author,
       })
     } catch {
     | _ => Error("Shape.Article: failed to decode json")
@@ -160,8 +160,8 @@ module Articles = {
         ->Option.getExn
 
       Result.Ok({
-        articles: articles,
-        articlesCount: articlesCount,
+        articles,
+        articlesCount,
       })
     } catch {
     | _ => Error("Shape.Article: failed to decode json")
@@ -240,14 +240,14 @@ module User = {
       let token = obj->Dict.get("token")->Option.flatMap(Json.decodeString)->Option.getExn
 
       Result.Ok({
-        id: id,
-        email: email,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-        username: username,
-        bio: bio,
-        image: image,
-        token: token,
+        id,
+        email,
+        createdAt,
+        updatedAt,
+        username,
+        bio,
+        image,
+        token,
       })
     } catch {
     | _ => Error("Shape.User: failed to decode json")
@@ -292,10 +292,10 @@ module CommentUser = {
       let following = obj->Dict.get("following")->Option.flatMap(Json.decodeBoolean)->Option.getExn
 
       Result.Ok({
-        username: username,
-        bio: bio,
-        image: image,
-        following: following,
+        username,
+        bio,
+        image,
+        following,
       })
     } catch {
     | _ => Error("Shape.CommentUser: failed to decode json")
@@ -346,11 +346,11 @@ module Comment = {
         ->Option.getExn
 
       Result.Ok({
-        id: id,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-        body: body,
-        author: author,
+        id,
+        createdAt,
+        updatedAt,
+        body,
+        author,
       })
     } catch {
     | _ => Error("Shape.Comment: failed to decode json")
@@ -400,11 +400,11 @@ module Settings = {
       let password = obj->Dict.get("password")->Utils.Json.decodeArrayString
 
       Result.Ok({
-        email: email,
-        bio: bio,
-        image: image,
-        username: username,
-        password: password,
+        email,
+        bio,
+        image,
+        username,
+        password,
       })
     } catch {
     | _ => Error("Shape.Settings: failed to decode json")
@@ -427,9 +427,9 @@ module Editor = {
       let description = obj->Dict.get("description")->Utils.Json.decodeArrayString
 
       Result.Ok({
-        title: title,
-        body: body,
-        description: description,
+        title,
+        body,
+        description,
       })
     } catch {
     | _ => Error("Shape.Editor: failed to decode json")
@@ -469,9 +469,9 @@ module Register = {
       let password = obj->Dict.get("password")->Utils.Json.decodeArrayString
 
       Result.Ok({
-        email: email,
-        password: password,
-        username: username,
+        email,
+        password,
+        username,
       })
     } catch {
     | _ => Error("Shape.Register: failed to decode json")

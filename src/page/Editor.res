@@ -45,7 +45,7 @@ module Form = {
                     article: Shape.Article.t,
                     tagList: string,
                     error: option<Shape.Editor.t>,
-                  )) => ({...article, title: title}, tagList, error))
+                  )) => ({...article, title}, tagList, error))
                 )
               }}
             />
@@ -71,7 +71,7 @@ module Form = {
                     article: Shape.Article.t,
                     tagList: string,
                     error: option<Shape.Editor.t>,
-                  )) => ({...article, description: description}, tagList, error))
+                  )) => ({...article, description}, tagList, error))
                 )
               }}
             />
@@ -97,7 +97,7 @@ module Form = {
                     article: Shape.Article.t,
                     tagList: string,
                     error: option<Shape.Editor.t>,
-                  )) => ({...article, body: body}, tagList, error))
+                  )) => ({...article, body}, tagList, error))
                 )
               }}
             />
@@ -212,11 +212,9 @@ module Create = {
                 setArticle(prev =>
                   prev
                   ->AsyncData.toIdle
-                  ->AsyncResult.map(((article, tagList, _error)) => (
-                    article,
-                    tagList,
-                    Some(errors),
-                  ))
+                  ->AsyncResult.map(
+                    ((article, tagList, _error)) => (article, tagList, Some(errors)),
+                  )
                 )
               | Error(_e) => ignore()
               }

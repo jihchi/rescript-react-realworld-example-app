@@ -150,7 +150,9 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
                 </Link>
               </li>
               {if articles->AsyncResult.isBusy {
-                <li className="nav-item"> <Spinner /> </li>
+                <li className="nav-item">
+                  <Spinner />
+                </li>
               } else {
                 React.null
               }}
@@ -159,7 +161,8 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
           {switch articles {
           | Init | Loading => React.null
           | Reloading(Error(_)) | Complete(Error(_)) => "ERROR"->React.string
-          | Reloading(Ok(ok)) | Complete(Ok(ok)) => <>
+          | Reloading(Ok(ok)) | Complete(Ok(ok)) =>
+            <>
               {ok.articles
               ->Js.Array2.map((article: Shape.Article.t) => {
                 let isFavoriteBusy = toggleFavoriteBusy->Belt.Set.String.has(_, article.slug)

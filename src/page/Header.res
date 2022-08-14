@@ -28,12 +28,14 @@ let make = (~user: option<Shape.User.t>) => {
         <Security.AuthenticatedOnly user>
           <li className="nav-item">
             <Link className="nav-link" onClick={Link.createArticle->Link.location}>
-              <i className="ion-compose" /> {" New Post"->React.string}
+              <i className="ion-compose" />
+              {" New Post"->React.string}
             </Link>
           </li>
           <li className="nav-item">
             <Link className="nav-link" onClick={Link.settings->Link.location}>
-              <i className="ion-gear-a" /> {" Settings"->React.string}
+              <i className="ion-gear-a" />
+              {" Settings"->React.string}
             </Link>
           </li>
           <li className="nav-item">

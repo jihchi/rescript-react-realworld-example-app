@@ -49,10 +49,12 @@ let make = (
               switch x {
               | Ok(comment) =>
                 setComments(prev =>
-                  prev->AsyncResult.map(comments => {
-                    let _ = comments->Js.Array2.unshift(comment)
-                    comments
-                  })
+                  prev->AsyncResult.map(
+                    comments => {
+                      let _ = comments->Js.Array2.unshift(comment)
+                      comments
+                    },
+                  )
                 )
                 setComment(_prev => AsyncData.complete(""))
               | Error(_error) => setComment(AsyncData.toIdle)

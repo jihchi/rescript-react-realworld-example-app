@@ -27,7 +27,10 @@ let make = (~slug: string, ~user: option<Shape.User.t>) => {
         <div className="article-meta">
           <ArticleAuthorAvatar article />
           <div className="info">
-            <ArticleAuthorName article /> <span className="date"> <ArticleDate article /> </span>
+            <ArticleAuthorName article />
+            <span className="date">
+              <ArticleDate article />
+            </span>
           </div>
           {isAuthor
             ? <ArticleEditButton data=article />
@@ -64,7 +67,10 @@ let make = (~slug: string, ~user: option<Shape.User.t>) => {
         <div className="article-meta">
           <ArticleAuthorAvatar article />
           <div className="info">
-            <ArticleAuthorName article /> <span className="date"> <ArticleDate article /> </span>
+            <ArticleAuthorName article />
+            <span className="date">
+              <ArticleDate article />
+            </span>
           </div>
           {isAuthor
             ? <ArticleEditButton data=article />

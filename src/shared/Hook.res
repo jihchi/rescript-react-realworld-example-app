@@ -26,11 +26,12 @@ let useArticles = (~feedType: Shape.FeedType.t): (
     | Personal(limit, offset) => API.feedArticles(~limit, ~offset, ())
     }
     ->then(data =>
-      setData(_prev =>
-        switch data {
-        | Ok(ok) => AsyncResult.completeOk(ok)
-        | Error(error) => AsyncResult.completeError(error)
-        }
+      setData(
+        _prev =>
+          switch data {
+          | Ok(ok) => AsyncResult.completeOk(ok)
+          | Error(error) => AsyncResult.completeError(error)
+          },
       )->resolve
     )
     ->ignore
@@ -54,11 +55,12 @@ let useArticlesInProfile: (
     | Favorited(favorited, limit, offset) => API.listArticles(~favorited, ~limit, ~offset, ())
     }
     ->then(data =>
-      setData(_prev =>
-        switch data {
-        | Ok(ok) => AsyncResult.completeOk(ok)
-        | Error(error) => AsyncResult.completeError(error)
-        }
+      setData(
+        _prev =>
+          switch data {
+          | Ok(ok) => AsyncResult.completeOk(ok)
+          | Error(error) => AsyncResult.completeError(error)
+          },
       )->resolve
     )
     ->ignore
@@ -79,11 +81,12 @@ let useTags: unit => asyncTags = () => {
 
     API.tags()
     ->then(data =>
-      setData(_prev =>
-        switch data {
-        | Ok(ok) => ok->AsyncResult.completeOk
-        | Error(error) => AsyncResult.completeError(error)
-        }
+      setData(
+        _prev =>
+          switch data {
+          | Ok(ok) => ok->AsyncResult.completeOk
+          | Error(error) => AsyncResult.completeError(error)
+          },
       )->resolve
     )
     ->ignore
@@ -102,11 +105,12 @@ let useCurrentUser: unit => (asyncData, (asyncData => asyncData) => unit) = () =
 
     API.currentUser()
     ->then(data =>
-      setData(_prev =>
-        switch data {
-        | Ok(data') => Some(data')->AsyncData.complete
-        | Error(_error) => None->AsyncData.complete
-        }
+      setData(
+        _prev =>
+          switch data {
+          | Ok(data') => Some(data')->AsyncData.complete
+          | Error(_error) => None->AsyncData.complete
+          },
       )->resolve
     )
     ->catch(_error => setData(_prev => None->AsyncData.complete)->resolve)
@@ -129,12 +133,13 @@ let useArticle = (~slug: string): (
 
     API.article(~action=Read(slug), ())
     ->then(data =>
-      setData(_prev =>
-        switch data {
-        | Ok(ok: Shape.Article.t) =>
-          AsyncResult.completeOk((ok, ok.tagList->Js.Array2.joinWith(","), None))
-        | Error(error) => AsyncResult.completeError(error)
-        }
+      setData(
+        _prev =>
+          switch data {
+          | Ok(ok: Shape.Article.t) =>
+            AsyncResult.completeOk((ok, ok.tagList->Js.Array2.joinWith(","), None))
+          | Error(error) => AsyncResult.completeError(error)
+          },
       )->resolve
     )
     ->ignore
@@ -162,11 +167,12 @@ let useComments: (
 
     API.getComments(~slug, ())
     ->then(data =>
-      setData(_prev =>
-        switch data {
-        | Ok(ok) => AsyncResult.completeOk(ok)
-        | Error(error) => AsyncResult.completeError(error)
-        }
+      setData(
+        _prev =>
+          switch data {
+          | Ok(ok) => AsyncResult.completeOk(ok)
+          | Error(error) => AsyncResult.completeError(error)
+          },
       )->resolve
     )
     ->ignore
@@ -184,8 +190,8 @@ let useComments: (
       switch resp {
       | Ok((_slug, id)) =>
         setData(prev =>
-          prev->AsyncResult.map(comments =>
-            comments->Belt.Array.keep((comment: Shape.Comment.t) => comment.id != id)
+          prev->AsyncResult.map(
+            comments => comments->Belt.Array.keep((comment: Shape.Comment.t) => comment.id != id),
           )
         )
       | Error(_error) => ignore()
@@ -426,26 +432,29 @@ let useToggleFavorite: (
       switch data {
       | Ok(_) =>
         setArticles(prev =>
-          prev->AsyncResult.map((articles: Shape.Articles.t) => {
-            ...articles,
-            articles: articles.articles->Belt.Array.map((article: Shape.Article.t) =>
-              if article.slug == slug {
-                {
-                  ...article,
-                  favorited: switch action {
-                  | Favorite(_) => true
-                  | Unfavorite(_) => false
+          prev->AsyncResult.map(
+            (articles: Shape.Articles.t) => {
+              ...articles,
+              articles: articles.articles->Belt.Array.map(
+                (article: Shape.Article.t) =>
+                  if article.slug == slug {
+                    {
+                      ...article,
+                      favorited: switch action {
+                      | Favorite(_) => true
+                      | Unfavorite(_) => false
+                      },
+                      favoritesCount: switch action {
+                      | Favorite(_) => article.favoritesCount + 1
+                      | Unfavorite(_) => article.favoritesCount - 1
+                      },
+                    }
+                  } else {
+                    article
                   },
-                  favoritesCount: switch action {
-                  | Favorite(_) => article.favoritesCount + 1
-                  | Unfavorite(_) => article.favoritesCount - 1
-                  },
-                }
-              } else {
-                article
-              }
-            ),
-          })
+              ),
+            },
+          )
         )
       | Error(_error) => ignore()
       }
@@ -473,11 +482,12 @@ let useProfile: (~username: string) => asyncAuthor = (~username) => {
 
     API.getProfile(~username, ())
     ->then(data =>
-      setData(_prev =>
-        switch data {
-        | Ok(ok) => AsyncResult.completeOk(ok)
-        | Error(error) => AsyncResult.completeError(error)
-        }
+      setData(
+        _prev =>
+          switch data {
+          | Ok(ok) => AsyncResult.completeOk(ok)
+          | Error(error) => AsyncResult.completeError(error)
+          },
       )->resolve
     )
     ->ignore
