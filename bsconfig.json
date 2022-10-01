@@ -3,7 +3,7 @@
   "namespace": true,
   "refmt": 3,
   "suffix": ".bs.js",
-  "reason": { "react-jsx": 3 },
+  "jsx": { "version": 4, "mode": "classic" },
   "bsc-flags": [
     "-bs-super-errors",
     "-bs-no-version-header"
