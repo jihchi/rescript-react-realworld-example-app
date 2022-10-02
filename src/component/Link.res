@@ -38,7 +38,9 @@ let handleClick = (onClick, event) => {
 }
 
 @react.component
-let make = (~className="", ~style=ReactDOM.Style.make(), ~onClick, ~children) => {
+let make = (~className=?, ~style=?, ~onClick, ~children) => {
+  let className = className->Belt.Option.getWithDefault("")
+  let style = style->Belt.Option.getWithDefault(ReactDOM.Style.make())
   let href = switch onClick {
   | Location(location) => Some(location->toString)
   | CustomFn(_fn) => None
@@ -48,6 +50,9 @@ let make = (~className="", ~style=ReactDOM.Style.make(), ~onClick, ~children) =>
 
 module Button = {
   @react.component
-  let make = (~className="", ~style=ReactDOM.Style.make(), ~onClick, ~disabled=false, ~children) =>
+  let make = (~className=?, ~style=?, ~onClick, ~disabled=false, ~children) => {
+    let className = className->Belt.Option.getWithDefault("")
+    let style = style->Belt.Option.getWithDefault(ReactDOM.Style.make())
     <button className style onClick={handleClick(onClick)} disabled> children </button>
+  }
 }

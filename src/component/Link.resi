@@ -22,51 +22,21 @@ let favorited: (~username: string) => location'
 let push: location' => unit
 let availableIf: (bool, onClickAction) => onClickAction
 
-@obj
-external makeProps: (
-  ~className: 'className=?,
-  ~style: 'style=?,
-  ~onClick: 'onClick,
-  ~children: 'children,
-  ~key: string=?,
-  unit,
-) => {
-  "children": 'children,
-  "className": option<'className>,
-  "style": option<'style>,
-  "onClick": 'onClick,
-} = ""
-
-let make: {
-  "children": React.element,
-  "className": option<string>,
-  "style": option<ReactDOM.Style.t>,
-  "onClick": onClickAction,
-} => React.element
+@react.component
+let make: (
+  ~className: string=?,
+  ~style: ReactDOM.Style.t=?,
+  ~onClick: onClickAction,
+  ~children: React.element,
+) => React.element
 
 module Button: {
-  @obj
-  external makeProps: (
-    ~className: 'className=?,
-    ~style: 'style=?,
-    ~onClick: 'onClick,
-    ~disabled: 'disabled=?,
-    ~children: 'children,
-    ~key: string=?,
-    unit,
-  ) => {
-    "children": 'children,
-    "className": option<'className>,
-    "disabled": option<'disabled>,
-    "onClick": 'onClick,
-    "style": option<'style>,
-  } = ""
-
-  let make: {
-    "className": option<string>,
-    "style": option<ReactDOM.Style.t>,
-    "onClick": onClickAction,
-    "disabled": option<bool>,
-    "children": React.element,
-  } => React.element
+  @react.component
+  let make: (
+    ~className: string=?,
+    ~style: ReactDOM.Style.t=?,
+    ~onClick: onClickAction,
+    ~disabled: bool=?,
+    ~children: React.element,
+  ) => React.element
 }
