@@ -191,10 +191,7 @@ module Tags = {
 
 module User = {
   type t = {
-    id: int,
     email: string,
-    createdAt: Js.Date.t,
-    updatedAt: Js.Date.t,
     username: string,
     bio: option<string>,
     image: option<string>,
@@ -202,10 +199,7 @@ module User = {
   }
 
   let empty = {
-    id: 0,
     email: "",
-    createdAt: Js.Date.make(),
-    updatedAt: Js.Date.make(),
     username: "",
     bio: None,
     image: None,
@@ -215,35 +209,14 @@ module User = {
   let decodeUser = (json: Json.t): Result.t<t, decodeError> => {
     try {
       let obj = json->Json.decodeObject->Option.getExn
-      let id =
-        obj
-        ->Dict.get("id")
-        ->Option.flatMap(Json.decodeNumber)
-        ->Option.map(int_of_float)
-        ->Option.getExn
       let email = obj->Dict.get("email")->Option.flatMap(Json.decodeString)->Option.getExn
-      let createdAt =
-        obj
-        ->Dict.get("createdAt")
-        ->Option.flatMap(Json.decodeString)
-        ->Option.map(Js.Date.fromString)
-        ->Option.getExn
-      let updatedAt =
-        obj
-        ->Dict.get("updatedAt")
-        ->Option.flatMap(Json.decodeString)
-        ->Option.map(Js.Date.fromString)
-        ->Option.getExn
       let username = obj->Dict.get("username")->Option.flatMap(Json.decodeString)->Option.getExn
       let bio = obj->Dict.get("bio")->Option.flatMap(Json.decodeString)
       let image = obj->Dict.get("image")->Option.flatMap(Json.decodeString)
       let token = obj->Dict.get("token")->Option.flatMap(Json.decodeString)->Option.getExn
 
       Result.Ok({
-        id,
         email,
-        createdAt,
-        updatedAt,
         username,
         bio,
         image,
