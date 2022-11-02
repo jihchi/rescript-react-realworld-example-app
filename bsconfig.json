@@ -3,7 +3,7 @@
   "namespace": true,
   "refmt": 3,
   "suffix": ".bs.js",
-  "jsx": { "version": 4, "mode": "classic" },
+  "jsx": { "version": 4, "mode": "automatic" },
   "bsc-flags": [
     "-bs-super-errors",
     "-bs-no-version-header"
@@ -17,10 +17,7 @@
     ]
   },
   "package-specs": [
-    {
-      "module": "es6",
-      "in-source": true
-    }
+    { "module": "es6", "in-source": true }
   ],
   "bs-dependencies": [
     "@rescript/react",
