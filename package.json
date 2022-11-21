@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "vite build",
-    "clean": "rescript clean -with-deps",
+    "clean": "rescript clean",
     "format": "npm run format:js && npm run format:res",
     "format:js": "prettier --write \"**/*.{js,json,md,yml}\"",
     "format:res": "rescript format -all",
