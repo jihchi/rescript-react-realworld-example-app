@@ -46,11 +46,6 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "eslintConfig": {
-    "ignorePatterns": [
-      "src/**/*.bs.js"
-    ]
-  },
   "browserslist": {
     "production": [
       ">0.2%",
