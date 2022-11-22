@@ -9,11 +9,7 @@
   ],
   "sources": {
     "dir": "src",
-    "subdirs": [
-      { "dir": "page", "subdirs": [{ "dir": "Article" }] },
-      { "dir": "component" },
-      { "dir": "shared" }
-    ]
+    "subdirs": true
   },
   "package-specs": [
     {
