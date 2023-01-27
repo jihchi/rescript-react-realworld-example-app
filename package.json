@@ -29,18 +29,18 @@
     "@rescript/react": "^0.10.3",
     "@ryyppy/rescript-promise": "^2.1.0",
     "bs-fetch": "^0.6.2",
-    "dompurify": "^2.4.1",
-    "marked": "^4.2.4",
+    "dompurify": "^2.4.3",
+    "marked": "^4.2.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rescript": "^10.0.1",
     "rescript-webapi": "^0.7.0"
   },
   "devDependencies": {
-    "@jihchi/vite-plugin-rescript": "^5.0.0",
-    "@vitejs/plugin-react": "^3.0.0",
-    "prettier": "^2.8.1",
-    "vite": "^4.0.0"
+    "@jihchi/vite-plugin-rescript": "^5.1.0",
+    "@vitejs/plugin-react": "^3.0.1",
+    "prettier": "^2.8.3",
+    "vite": "^4.0.4"
   },
   "prettier": {
     "singleQuote": true,
