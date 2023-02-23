@@ -44,5 +44,7 @@ When you’re ready to deploy to production, create a production build with `npm
 Many thanks for your help!
 
 <a href="https://github.com/jihchi/rescript-react-realworld-example-app/graphs/contributors">
-  <img src="https://contributors-img.web.app/image?repo=jihchi/rescript-react-realworld-example-app" />
+  <img src="https://contrib.rocks/image?repo=jihchi/rescript-react-realworld-example-app" />
 </a>
+
+The image of contributors is made with [contrib.rocks](https://contrib.rocks).
