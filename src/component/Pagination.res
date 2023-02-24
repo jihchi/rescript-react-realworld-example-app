@@ -18,7 +18,7 @@ let make = (~limit: int, ~offset: int, ~total: int, ~onClick: int => unit) =>
           <li key={page->string_of_int} className>
             <a
               className="page-link"
-              href={`#${page->Belt.Int.toString}`}
+              href={`#${page->Int.toString}`}
               onClick={event =>
                 if Utils.isMouseRightClick(event) {
                   event->ReactEvent.Mouse.preventDefault

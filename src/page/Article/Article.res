@@ -1,5 +1,3 @@
-module Option = Belt.Option
-
 @react.component
 let make = (~slug: string, ~user: option<Shape.User.t>) => {
   let (articleAndTagList, _setArticle) = Hook.useArticle(~slug)

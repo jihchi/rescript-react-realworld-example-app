@@ -1,5 +1,3 @@
-module Option = Belt.Option
-
 @react.component
 let make = (~setUser) => {
   let (data, setData) = React.useState(() => AsyncData.complete(("", "", None)))
@@ -76,9 +74,9 @@ let make = (~setUser) => {
                       let result =
                         json
                         ->Js.Json.decodeObject
-                        ->Belt.Option.getExn
+                        ->Option.getExn
                         ->Js.Dict.get("errors")
-                        ->Belt.Option.getExn
+                        ->Option.getExn
                         ->Shape.Login.decode
                       switch result {
                       | Ok(errors) =>

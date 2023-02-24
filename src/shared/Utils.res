@@ -9,13 +9,13 @@ let monthInMs = 30. *. dayInMs
 let parseCookies: unit => array<cookiePair> = () =>
   Webapi.Dom.document
   ->Webapi.Dom.Document.asHtmlDocument
-  ->Belt.Option.getExn
+  ->Option.getExn
   ->Webapi.Dom.HtmlDocument.cookie
   ->Js.String2.split(";")
   ->Js.Array2.reduce((acc, str) => {
     let pair = str->Js.String2.split("=")->Js.Array2.map(Js.String.trim)
-    let key = pair->Belt.Array.getExn(0)
-    let value = pair->Belt.Array.get(1)
+    let key = pair->Array.getUnsafe(0)
+    let value = pair->Array.get(1)
 
     acc->Js.Array2.concat([(key, value)])
   }, [])
@@ -33,15 +33,15 @@ let setCookieRaw: (
   ~path: string=?,
   unit,
 ) => unit = (~key, ~value=?, ~expires, ~path=?, ()) => {
-  let htmlDocument = Webapi.Dom.document->Webapi.Dom.Document.asHtmlDocument->Belt.Option.getExn
+  let htmlDocument = Webapi.Dom.document->Webapi.Dom.Document.asHtmlDocument->Option.getExn
 
-  let value = value->Belt.Option.getWithDefault("")
+  let value = value->Option.getWithDefault("")
   let expires = expires !== "" ? `expires=${expires};` : ""
   let path =
     path
-    ->Belt.Option.flatMap(path => path == "" ? None : Some(path))
-    ->Belt.Option.map(path => ` path=${path};`)
-    ->Belt.Option.getWithDefault("")
+    ->Option.flatMap(path => path == "" ? None : Some(path))
+    ->Option.map(path => ` path=${path};`)
+    ->Option.getWithDefault("")
   let cookie = `${key}=${value};${expires}${path}`
 
   Webapi.Dom.HtmlDocument.setCookie(htmlDocument, cookie)
@@ -66,9 +66,9 @@ let isMouseRightClick = event =>
   !ReactEvent.Mouse.shiftKey(event)
 
 let formatDate: Js.Date.t => string = date => {
-  let yyyy = date->Js.Date.getFullYear->Belt.Int.fromFloat->Belt.Int.toString
-  let mm = date->Js.Date.getMonth->Belt.Int.fromFloat->Belt.Int.toString
-  let dd = date->Js.Date.getDate->Belt.Int.fromFloat->Belt.Int.toString
+  let yyyy = date->Js.Date.getFullYear->Int.fromFloat->Int.toString
+  let mm = date->Js.Date.getMonth->Int.fromFloat->Int.toString
+  let dd = date->Js.Date.getDate->Int.fromFloat->Int.toString
 
   `${yyyy}/${mm}/${dd}`
 }
@@ -76,6 +76,6 @@ let formatDate: Js.Date.t => string = date => {
 module Json = {
   let decodeArrayString = (json: option<Js.Json.t>): option<array<string>> =>
     json
-    ->Belt.Option.flatMap(Js.Json.decodeArray)
-    ->Belt.Option.map(xs => xs->Belt.Array.keepMap(Js.Json.decodeString))
+    ->Option.flatMap(Js.Json.decodeArray)
+    ->Option.map(xs => xs->Array.filterMap(Js.Json.decodeString))
 }

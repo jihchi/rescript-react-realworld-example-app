@@ -1,6 +1,6 @@
 @react.component
 let make = (~user: option<Shape.User.t>) => {
-  let currentUser = user->Belt.Option.getWithDefault(Shape.User.empty)
+  let currentUser = user->Option.getWithDefault(Shape.User.empty)
 
   <nav className="navbar navbar-light">
     <div className="container">

@@ -1,5 +1,3 @@
-module Option = Belt.Option
-
 @react.component
 let make = (~article) =>
   article

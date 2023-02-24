@@ -2,10 +2,14 @@
   "name": "rescript-react-realworld-example-app",
   "namespace": true,
   "suffix": ".bs.js",
-  "reason": { "react-jsx": 3 },
+  "jsx": {
+    "version": 4,
+    "mode": "automatic"
+  },
   "bsc-flags": [
     "-bs-super-errors",
-    "-bs-no-version-header"
+    "-bs-no-version-header",
+    "-open RescriptCore"
   ],
   "sources": {
     "dir": "src",
@@ -19,7 +23,7 @@
   ],
   "bs-dependencies": [
     "@rescript/react",
-    "@ryyppy/rescript-promise",
+    "@rescript/core",
     "bs-fetch",
     "rescript-webapi"
   ],
