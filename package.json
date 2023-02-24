@@ -33,7 +33,7 @@
     "marked": "^4.2.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "rescript": "^10.0.1",
+    "rescript": "^10.1.2",
     "rescript-webapi": "^0.7.0"
   },
   "devDependencies": {
