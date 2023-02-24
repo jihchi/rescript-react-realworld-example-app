@@ -1,10 +1,8 @@
-module Option = Belt.Option
-
 let parseTagList = (str: string): array<string> =>
   str
   ->Js.String2.split(",")
-  ->Belt.Array.map(Js.String2.trim)
-  ->Belt.Array.keep(v => Js.String2.length(v) > 0)
+  ->Array.map(Js.String2.trim)
+  ->Array.filter(v => Js.String2.length(v) > 0)
 
 module Form = {
   @react.component
@@ -203,9 +201,9 @@ module Create = {
               let result =
                 json
                 ->Js.Json.decodeObject
-                ->Belt.Option.getExn
+                ->Option.getExn
                 ->Js.Dict.get("errors")
-                ->Belt.Option.getExn
+                ->Option.getExn
                 ->Shape.Editor.decode
               switch result {
               | Ok(errors) =>

@@ -75,9 +75,7 @@ let useTags: unit => asyncTags = () => {
   let (data, setData) = React.useState(() => AsyncResult.init)
 
   React.useEffect0(() => {
-    setData(prev =>
-      prev->AsyncResult.getOk->Belt.Option.getWithDefault([])->AsyncResult.reloadingOk
-    )
+    setData(prev => prev->AsyncResult.getOk->Option.getWithDefault([])->AsyncResult.reloadingOk)
 
     API.tags()
     ->then(data =>
@@ -191,7 +189,7 @@ let useComments: (
       | Ok((_slug, id)) =>
         setData(prev =>
           prev->AsyncResult.map(
-            comments => comments->Belt.Array.keep((comment: Shape.Comment.t) => comment.id != id),
+            comments => comments->Array.filter((comment: Shape.Comment.t) => comment.id != id),
           )
         )
       | Error(_error) => ignore()
@@ -215,13 +213,10 @@ let useFollow: (
   | Init =>
     article
     ->AsyncResult.getOk
-    ->Belt.Option.map((ok: Shape.Article.t) =>
-      AsyncData.complete((
-        ok.author.username,
-        ok.author.following->Belt.Option.getWithDefault(false),
-      ))
+    ->Option.map((ok: Shape.Article.t) =>
+      AsyncData.complete((ok.author.username, ok.author.following->Option.getWithDefault(false)))
     )
-    ->Belt.Option.getWithDefault(AsyncData.complete(("", false)))
+    ->Option.getWithDefault(AsyncData.complete(("", false)))
   | Loading as orig | Reloading(_) as orig | Complete(_) as orig => orig
   }
 
@@ -229,16 +224,16 @@ let useFollow: (
     let username =
       follow
       ->AsyncData.getValue
-      ->Belt.Option.map(((username, _following)) => username)
-      ->Belt.Option.getWithDefault("")
+      ->Option.map(((username, _following)) => username)
+      ->Option.getWithDefault("")
 
     let action =
       follow
       ->AsyncData.getValue
-      ->Belt.Option.flatMap(((_username, following)) =>
+      ->Option.flatMap(((_username, following)) =>
         following ? Some(API.Action.Unfollow(username)) : None
       )
-      ->Belt.Option.getWithDefault(API.Action.Follow(username))
+      ->Option.getWithDefault(API.Action.Follow(username))
 
     setState(_prev => follow->AsyncData.toBusy)
 
@@ -247,7 +242,7 @@ let useFollow: (
       setState(_prev =>
         switch data {
         | Ok(ok: Shape.Author.t) =>
-          AsyncData.complete((ok.username, ok.following->Belt.Option.getWithDefault(false)))
+          AsyncData.complete((ok.username, ok.following->Option.getWithDefault(false)))
         | Error(_error) => AsyncData.complete(("", false))
         }
       )->resolve
@@ -274,10 +269,10 @@ let useFollowInProfile: (
   | Init =>
     profile
     ->AsyncResult.getOk
-    ->Belt.Option.map((ok: Shape.Author.t) =>
-      AsyncData.complete((ok.username, ok.following->Belt.Option.getWithDefault(false)))
+    ->Option.map((ok: Shape.Author.t) =>
+      AsyncData.complete((ok.username, ok.following->Option.getWithDefault(false)))
     )
-    ->Belt.Option.getWithDefault(AsyncData.complete(("", false)))
+    ->Option.getWithDefault(AsyncData.complete(("", false)))
   | Loading as orig | Reloading(_) as orig | Complete(_) as orig => orig
   }
 
@@ -285,16 +280,16 @@ let useFollowInProfile: (
     let username =
       follow
       ->AsyncData.getValue
-      ->Belt.Option.map(((username, _following)) => username)
-      ->Belt.Option.getWithDefault("")
+      ->Option.map(((username, _following)) => username)
+      ->Option.getWithDefault("")
 
     let action =
       follow
       ->AsyncData.getValue
-      ->Belt.Option.flatMap(((_username, following)) =>
+      ->Option.flatMap(((_username, following)) =>
         following ? Some(API.Action.Unfollow(username)) : None
       )
-      ->Belt.Option.getWithDefault(API.Action.Follow(username))
+      ->Option.getWithDefault(API.Action.Follow(username))
 
     setState(_prev => follow->AsyncData.toBusy)
 
@@ -303,7 +298,7 @@ let useFollowInProfile: (
       setState(_prev =>
         switch data {
         | Ok(ok: Shape.Author.t) =>
-          AsyncData.complete((ok.username, ok.following->Belt.Option.getWithDefault(false)))
+          AsyncData.complete((ok.username, ok.following->Option.getWithDefault(false)))
         | Error(_error) => AsyncData.complete(("", false))
         }
       )->resolve
@@ -330,16 +325,16 @@ let useFavorite = (~article: asyncArticle, ~user: option<Shape.User.t>): (
   | Init =>
     article
     ->AsyncResult.getOk
-    ->Belt.Option.map((ok: Shape.Article.t) =>
+    ->Option.map((ok: Shape.Article.t) =>
       AsyncData.complete((ok.favorited, ok.favoritesCount, ok.slug))
     )
-    ->Belt.Option.getWithDefault(AsyncData.complete((false, 0, "")))
+    ->Option.getWithDefault(AsyncData.complete((false, 0, "")))
   | Loading as orig | Reloading(_) as orig | Complete(_) as orig => orig
   }
 
   let sendRequest = () => {
     let (favorited, _favoritesCount, slug) =
-      favorite->AsyncData.getValue->Belt.Option.getWithDefault((false, 0, ""))
+      favorite->AsyncData.getValue->Option.getWithDefault((false, 0, ""))
 
     let action = favorited ? API.Action.Unfavorite(slug) : API.Action.Favorite(slug)
 
@@ -376,8 +371,8 @@ let useDeleteArticle: (
     let slug =
       article
       ->AsyncResult.getOk
-      ->Belt.Option.map((ok: Shape.Article.t) => ok.slug)
-      ->Belt.Option.getWithDefault("")
+      ->Option.map((ok: Shape.Article.t) => ok.slug)
+      ->Option.getWithDefault("")
 
     setState(_prev => true)
 
@@ -435,7 +430,7 @@ let useToggleFavorite: (
           prev->AsyncResult.map(
             (articles: Shape.Articles.t) => {
               ...articles,
-              articles: articles.articles->Belt.Array.map(
+              articles: articles.articles->Array.map(
                 (article: Shape.Article.t) =>
                   if article.slug == slug {
                     {
@@ -502,7 +497,7 @@ let useViewMode: (~route: Shape.Profile.viewMode) => (Shape.Profile.viewMode, in
   ~route,
 ) => {
   let (viewMode, setViewMode) = React.useState(() => None)
-  let finalViewMode = viewMode->Belt.Option.getWithDefault(route)
+  let finalViewMode = viewMode->Option.getWithDefault(route)
 
   React.useEffect2(() => {
     setViewMode(_prev => None)

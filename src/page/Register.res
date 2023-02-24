@@ -1,5 +1,3 @@
-module Option = Belt.Option
-
 type t = {
   username: string,
   email: string,
@@ -104,9 +102,9 @@ let make = (~setUser) => {
                         let result =
                           json
                           ->Js.Json.decodeObject
-                          ->Belt.Option.getExn
+                          ->Option.getExn
                           ->Js.Dict.get("errors")
-                          ->Belt.Option.getExn
+                          ->Option.getExn
                           ->Shape.Register.decode
                         switch result {
                         | Ok(errors) =>

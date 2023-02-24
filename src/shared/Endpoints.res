@@ -9,15 +9,12 @@ module Articles = {
     ~favorited: string=?,
     unit,
   ) => string = (~limit=10, ~offset=0, ~tag=?, ~author=?, ~favorited=?, ()) => {
-    let limit = limit->Belt.Int.toString
-    let offset = offset->Belt.Int.toString
-    let tag = tag->Belt.Option.map(tag' => "&tag=" ++ tag')->Belt.Option.getWithDefault("")
-    let author =
-      author->Belt.Option.map(author' => "&author=" ++ author')->Belt.Option.getWithDefault("")
+    let limit = limit->Int.toString
+    let offset = offset->Int.toString
+    let tag = tag->Option.map(tag' => "&tag=" ++ tag')->Option.getWithDefault("")
+    let author = author->Option.map(author' => "&author=" ++ author')->Option.getWithDefault("")
     let favorited =
-      favorited
-      ->Belt.Option.map(favorited' => "&favorited=" ++ favorited')
-      ->Belt.Option.getWithDefault("")
+      favorited->Option.map(favorited' => "&favorited=" ++ favorited')->Option.getWithDefault("")
 
     `${backend}/api/articles?limit=${limit}&offset=${offset}${tag}${author}${favorited}`
   }
@@ -28,8 +25,8 @@ module Articles = {
     `${backend}/api/articles/${slug}/favorite`
 
   let feed: (~limit: int=?, ~offset: int=?, unit) => string = (~limit=10, ~offset=0, ()) => {
-    let limit = limit->Belt.Int.toString
-    let offset = offset->Belt.Int.toString
+    let limit = limit->Int.toString
+    let offset = offset->Int.toString
 
     `${backend}/api/articles/feed?limit=${limit}&offset=${offset}`
   }
@@ -38,7 +35,7 @@ module Articles = {
     `${backend}/api/articles/${slug}/comments`
 
   let comment: (~slug: string, ~id: int, unit) => string = (~slug, ~id, ()) => {
-    let id = id->Belt.Int.toString
+    let id = id->Int.toString
 
     `${backend}/api/articles/${slug}/comments/${id}`
   }

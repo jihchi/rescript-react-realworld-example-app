@@ -1,5 +1,3 @@
-module Option = Belt.Option
-module Result = Belt.Result
 module Json = Js.Json
 module Dict = Js.Dict
 
@@ -78,7 +76,7 @@ module Article = {
         obj
         ->Dict.get("tagList")
         ->Option.flatMap(Json.decodeArray)
-        ->Option.flatMap(tagList => Some(tagList->Belt.Array.keepMap(Json.decodeString)))
+        ->Option.flatMap(tagList => Some(tagList->Array.filterMap(Json.decodeString)))
         ->Option.getExn
       let createdAt =
         obj
@@ -143,7 +141,7 @@ module Articles = {
         ->Option.flatMap(Json.decodeArray)
         ->Option.flatMap(articles => {
           articles
-          ->Belt.Array.keepMap(article =>
+          ->Array.filterMap(article =>
             switch article->Article.decode {
             | Ok(ok) => Some(ok)
             | Error(_err) => None
@@ -179,7 +177,7 @@ module Tags = {
         obj
         ->Dict.get("tags")
         ->Option.flatMap(Json.decodeArray)
-        ->Option.map(tags => tags->Belt.Array.keepMap(Json.decodeString))
+        ->Option.map(tags => tags->Array.filterMap(Json.decodeString))
         ->Option.getExn
 
       Result.Ok(tags)
@@ -338,7 +336,7 @@ module Comment = {
         ->Dict.get("comments")
         ->Option.flatMap(Json.decodeArray)
         ->Option.map(comments => {
-          comments->Belt.Array.keepMap(comment => {
+          comments->Array.filterMap(comment => {
             switch comment->decodeComment {
             | Ok(ok) => Some(ok)
             | Error(_err) => None

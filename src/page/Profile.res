@@ -1,5 +1,3 @@
-module Option = Belt.Option
-
 @react.component
 let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
   let (viewMode, changeOffset) = Hook.useViewMode(~route=viewMode)

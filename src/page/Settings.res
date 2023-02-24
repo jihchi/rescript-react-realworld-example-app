@@ -5,8 +5,7 @@ let make = (
 ) => {
   let (result, setResult) = React.useState(() => AsyncData.complete((user, "", None)))
   let isBusy = result->AsyncData.isBusy
-  let (form, password, error) =
-    result->AsyncData.getValue->Belt.Option.getWithDefault((user, "", None))
+  let (form, password, error) = result->AsyncData.getValue->Option.getWithDefault((user, "", None))
 
   <div className="settings-page">
     <div className="container page">
@@ -32,7 +31,7 @@ let make = (
                   type_="text"
                   placeholder="URL of profile picture"
                   disabled=isBusy
-                  value={form.image->Belt.Option.getWithDefault("")}
+                  value={form.image->Option.getWithDefault("")}
                   onChange={event => {
                     let image = ReactEvent.Form.target(event)["value"]
                     setResult(prev =>
@@ -70,7 +69,7 @@ let make = (
                   rows=8
                   placeholder="Short bio about you"
                   disabled=isBusy
-                  value={form.bio->Belt.Option.getWithDefault("")}
+                  value={form.bio->Option.getWithDefault("")}
                   onChange={event => {
                     let bio = ReactEvent.Form.target(event)["value"]
                     setResult(prev =>
@@ -142,9 +141,9 @@ let make = (
                           let result =
                             json
                             ->Js.Json.decodeObject
-                            ->Belt.Option.getExn
+                            ->Option.getExn
                             ->Js.Dict.get("errors")
-                            ->Belt.Option.getExn
+                            ->Option.getExn
                             ->Shape.Settings.decode
                           switch result {
                           | Ok(errors) =>
