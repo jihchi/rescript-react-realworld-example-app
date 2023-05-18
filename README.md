@@ -31,13 +31,13 @@ To get the frontend running locally:
 ```bash
 git clone https://github.com/jihchi/rescript-react-realworld-example-app.git
 cd rescript-react-realworld-example-app
-npm install
-npm start
+pnpm install
+pnpm start
 ```
 
 Then open http://localhost:3000 to see your app.
 
-When you’re ready to deploy to production, create a production build with `npm run build` and you will find result in folder `/dist`, after you created a production build, you can execute `npm run serve` to serve the folder.
+When you’re ready to deploy to production, create a production build with `pnpm run build` and you will find result in folder `/dist`, after you created a production build, you can execute `pnpm run serve` to serve the folder.
 
 ## Contributors
 
