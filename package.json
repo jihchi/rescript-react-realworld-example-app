@@ -11,9 +11,10 @@
     "rescript-react",
     "react"
   ],
+  "packageManager": "pnpm@8.5.1",
   "engines": {
     "node": "^16",
-    "npm": "^8"
+    "pnpm": "^8"
   },
   "scripts": {
     "build": "vite build",
