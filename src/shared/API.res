@@ -17,14 +17,14 @@ module Action = {
     | Unfavorite(string)
 }
 
-module Headers = {
-  let addJwtToken: unit => array<(string, string)> = () =>
+module Helpers = {
+  let addJwtToAuthorization: unit => array<(string, string)> = () =>
     Utils.getCookie("jwtToken")
     ->Option.flatMap(snd)
     ->Option.map(token => [("Authorization", `Token ${token}`)])
     ->Option.getWithDefault([])
 
-  let addContentTypeAsJson: unit => array<(string, string)> = () => [
+  let addJsonToContentType: unit => array<(string, string)> = () => [
     ("Content-Type", "application/json; charset=UTF-8"),
   ]
 }
@@ -85,38 +85,38 @@ let article: (~action: Action.article, unit) => Promise.t<result<Shape.Article.t
       ->Js.Dict.fromList
       ->Js.Json.object_
 
-    list{("article", article)}
-    ->Js.Dict.fromList
-    ->Js.Json.object_
-    ->Js.Json.stringify
-    ->BodyInit.make
-    ->Some
-  | Read(_) | Delete(_) => None
+    list{("article", article)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
+  | Read(_) | Delete(_) => Body.none
   }
 
   let method__ = switch action {
-  | Create(_) => Post
-  | Read(_) => Get
-  | Update(_) => Put
-  | Delete(_) => Delete
+  | Create(_) => #POST
+  | Read(_) => #GET
+  | Update(_) => #PUT
+  | Delete(_) => #DELETE
   }
 
   let headers =
     switch action {
-    | Create(_) | Update(_) => Headers.addContentTypeAsJson()
+    | Create(_) | Update(_) => Helpers.addJsonToContentType()
     | Read(_) | Delete(_) => []
     }
-    ->Array.concat(Headers.addJwtToken())
-    ->HeadersInit.makeWithArray
+    ->Array.concat(Helpers.addJwtToAuthorization())
+    ->Headers.Init.array
+    ->Headers.make
 
   let slug = switch action {
   | Create(_) => ""
   | Read(slug) | Update(slug, _) | Delete(slug) => slug
   }
 
-  fetchWithInit(
+  fetch(
     Endpoints.Articles.article(~slug, ()),
-    RequestInit.make(~method_=method__, ~headers, ~body?, ()),
+    {
+      method: method__,
+      headers,
+      body,
+    },
   )
   ->then(parseJsonIfOk)
   ->then(getErrorBodyJson)
@@ -143,23 +143,24 @@ let favoriteArticle: (
   ~action: Action.favorite,
   unit,
 ) => Promise.t<result<Shape.Article.t, AppError.t>> = (~action, ()) => {
-  let requestInit = RequestInit.make(
-    ~method_=switch action {
-    | Favorite(_slug) => Post
-    | Unfavorite(_slug) => Delete
-    },
-    ~headers=Headers.addJwtToken()->HeadersInit.makeWithArray,
-    (),
-  )
-
-  Endpoints.Articles.favorite(
+  let endpoint = Endpoints.Articles.favorite(
     ~slug=switch action {
     | Favorite(slug) => slug
     | Unfavorite(slug) => slug
     },
     (),
   )
-  ->fetchWithInit(_, requestInit)
+
+  fetch(
+    endpoint,
+    {
+      method: switch action {
+      | Favorite(_slug) => #POST
+      | Unfavorite(_slug) => #DELETE
+      },
+      headers: Helpers.addJwtToAuthorization()->Headers.Init.array->Headers.make,
+    },
+  )
   ->then(parseJsonIfOk)
   ->then(getErrorBodyText)
   ->then(result =>
@@ -196,10 +197,14 @@ let listArticles: (
   ~favorited=?,
   (),
 ) => {
-  let requestInit = RequestInit.make(~headers=Headers.addJwtToken()->HeadersInit.makeWithArray, ())
+  let endpoint = Endpoints.Articles.root(~limit, ~offset, ~tag?, ~author?, ~favorited?, ())
 
-  Endpoints.Articles.root(~limit, ~offset, ~tag?, ~author?, ~favorited?, ())
-  ->fetchWithInit(_, requestInit)
+  fetch(
+    endpoint,
+    {
+      headers: Helpers.addJwtToAuthorization()->Headers.Init.array->Headers.make,
+    },
+  )
   ->then(parseJsonIfOk)
   ->then(getErrorBodyText)
   ->then(result =>
@@ -212,10 +217,12 @@ let feedArticles: (
   ~offset: int=?,
   unit,
 ) => Promise.t<result<Shape.Articles.t, AppError.t>> = (~limit=10, ~offset=0, ()) => {
-  let requestInit = RequestInit.make(~headers=Headers.addJwtToken()->HeadersInit.makeWithArray, ())
-
-  Endpoints.Articles.feed(~limit, ~offset, ())
-  ->fetchWithInit(_, requestInit)
+  fetch(
+    Endpoints.Articles.feed(~limit, ~offset, ()),
+    {
+      headers: Helpers.addJwtToAuthorization()->Headers.Init.array->Headers.make,
+    },
+  )
   ->then(parseJsonIfOk)
   ->then(getErrorBodyText)
   ->then(result =>
@@ -224,8 +231,12 @@ let feedArticles: (
 }
 
 let tags: unit => Promise.t<result<Shape.Tags.t, AppError.t>> = () =>
-  Endpoints.tags
-  ->fetch
+  fetch(
+    Endpoints.tags,
+    {
+      method: #GET,
+    },
+  )
   ->then(parseJsonIfOk)
   ->then(getErrorBodyText)
   ->then(result =>
@@ -233,10 +244,12 @@ let tags: unit => Promise.t<result<Shape.Tags.t, AppError.t>> = () =>
   )
 
 let currentUser: unit => Promise.t<result<Shape.User.t, AppError.t>> = () => {
-  let requestInit = RequestInit.make(~headers=Headers.addJwtToken()->HeadersInit.makeWithArray, ())
-
-  Endpoints.user
-  ->fetchWithInit(_, requestInit)
+  fetch(
+    Endpoints.user,
+    {
+      headers: Helpers.addJwtToAuthorization()->Headers.Init.array->Headers.make,
+    },
+  )
   ->then(parseJsonIfOk)
   ->then(getErrorBodyText)
   ->then(result =>
@@ -264,20 +277,20 @@ let updateUser: (
     ->List.flatten
     ->Js.Dict.fromList
     ->Js.Json.object_
-  let body =
-    list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->BodyInit.make
 
-  let requestInit = RequestInit.make(
-    ~method_=Put,
-    ~headers=Headers.addJwtToken()
-    ->Array.concat(Headers.addContentTypeAsJson())
-    ->HeadersInit.makeWithArray,
-    ~body,
-    (),
+  let body = list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
+
+  fetch(
+    Endpoints.user,
+    {
+      method: #PUT,
+      headers: Helpers.addJwtToAuthorization()
+      ->Array.concat(Helpers.addJsonToContentType())
+      ->Headers.Init.array
+      ->Headers.make,
+      body,
+    },
   )
-
-  Endpoints.user
-  ->fetchWithInit(_, requestInit)
   ->then(parseJsonIfOk)
   ->then(getErrorBodyJson)
   ->then(result =>
@@ -289,22 +302,21 @@ let followUser: (~action: Action.follow, unit) => Promise.t<result<Shape.Author.
   ~action,
   (),
 ) => {
-  let requestInit = RequestInit.make(
-    ~method_=switch action {
-    | Follow(_username) => Post
-    | Unfollow(_username) => Delete
+  fetch(
+    Endpoints.Profiles.follow(
+      ~username=switch action {
+      | Follow(username) | Unfollow(username) => username
+      },
+      (),
+    ),
+    {
+      method: switch action {
+      | Follow(_username) => #POST
+      | Unfollow(_username) => #DELETE
+      },
+      headers: Helpers.addJwtToAuthorization()->Headers.Init.array->Headers.make,
     },
-    ~headers=Headers.addJwtToken()->HeadersInit.makeWithArray,
-    (),
   )
-
-  Endpoints.Profiles.follow(
-    ~username=switch action {
-    | Follow(username) | Unfollow(username) => username
-    },
-    (),
-  )
-  ->fetchWithInit(_, requestInit)
   ->then(parseJsonIfOk)
   ->then(getErrorBodyText)
   ->then(result =>
@@ -330,10 +342,12 @@ let getComments: (~slug: string, unit) => Promise.t<result<array<Shape.Comment.t
   ~slug,
   (),
 ) => {
-  let requestInit = RequestInit.make(~headers=Headers.addJwtToken()->HeadersInit.makeWithArray, ())
-
-  Endpoints.Articles.comments(~slug, ())
-  ->fetchWithInit(_, requestInit)
+  fetch(
+    Endpoints.Articles.comments(~slug, ()),
+    {
+      headers: Helpers.addJwtToAuthorization()->Headers.Init.array->Headers.make,
+    },
+  )
   ->then(parseJsonIfOk)
   ->then(getErrorBodyText)
   ->then(result =>
@@ -346,14 +360,13 @@ let deleteComment: (
   ~id: int,
   unit,
 ) => Promise.t<result<(string, int), AppError.t>> = (~slug, ~id, ()) => {
-  let requestInit = RequestInit.make(
-    ~method_=Delete,
-    ~headers=Headers.addJwtToken()->HeadersInit.makeWithArray,
-    (),
+  fetch(
+    Endpoints.Articles.comment(~slug, ~id, ()),
+    {
+      method: #DELETE,
+      headers: Helpers.addJwtToAuthorization()->Headers.Init.array->Headers.make,
+    },
   )
-
-  Endpoints.Articles.comment(~slug, ~id, ())
-  ->fetchWithInit(_, requestInit)
   ->then(parseJsonIfOk)
   ->then(getErrorBodyText)
   ->then(result => result->Result.flatMap(_json => Result.Ok((slug, id)))->resolve)
@@ -367,19 +380,19 @@ let addComment: (
   let comment = list{("body", Js.Json.string(body))}->Js.Dict.fromList->Js.Json.object_
 
   let body =
-    list{("comment", comment)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->BodyInit.make
+    list{("comment", comment)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
 
-  let requestInit = RequestInit.make(
-    ~method_=Post,
-    ~headers=Headers.addJwtToken()
-    ->Array.concat(Headers.addContentTypeAsJson())
-    ->HeadersInit.makeWithArray,
-    ~body,
-    (),
+  fetch(
+    Endpoints.Articles.comments(~slug, ()),
+    {
+      method: #POST,
+      headers: Helpers.addJwtToAuthorization()
+      ->Array.concat(Helpers.addJsonToContentType())
+      ->Headers.Init.array
+      ->Headers.make,
+      body,
+    },
   )
-
-  Endpoints.Articles.comments(~slug, ())
-  ->fetchWithInit(_, requestInit)
   ->then(parseJsonIfOk)
   ->then(getErrorBodyText)
   ->then(result =>
@@ -405,10 +418,12 @@ let getProfile: (~username: string, unit) => Promise.t<result<Shape.Author.t, Ap
   ~username,
   (),
 ) => {
-  let requestInit = RequestInit.make(~headers=Headers.addJwtToken()->HeadersInit.makeWithArray, ())
-
-  Endpoints.Profiles.profile(~username, ())
-  ->fetchWithInit(_, requestInit)
+  fetch(
+    Endpoints.Profiles.profile(~username, ()),
+    {
+      headers: Helpers.addJwtToAuthorization()->Headers.Init.array->Headers.make,
+    },
+  )
   ->then(parseJsonIfOk)
   ->then(getErrorBodyText)
   ->then(result =>
@@ -438,18 +453,16 @@ let login = (~email: string, ~password: string, ()): Promise.t<
     ->Js.Dict.fromList
     ->Js.Json.object_
 
-  let body =
-    list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->BodyInit.make
+  let body = list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
 
-  let requestInit = RequestInit.make(
-    ~method_=Post,
-    ~headers=Headers.addContentTypeAsJson()->HeadersInit.makeWithArray,
-    ~body,
-    (),
+  fetch(
+    Endpoints.Users.login,
+    {
+      method: #POST,
+      headers: Helpers.addJsonToContentType()->Headers.Init.array->Headers.make,
+      body,
+    },
   )
-
-  Endpoints.Users.login
-  ->fetchWithInit(_, requestInit)
   ->then(parseJsonIfOk)
   ->then(getErrorBodyJson)
   ->then(result =>
@@ -472,18 +485,16 @@ let register: (
     ->Js.Dict.fromList
     ->Js.Json.object_
 
-  let body =
-    list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->BodyInit.make
+  let body = list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
 
-  let requestInit = RequestInit.make(
-    ~method_=Post,
-    ~headers=Headers.addContentTypeAsJson()->HeadersInit.makeWithArray,
-    ~body,
-    (),
+  fetch(
+    Endpoints.Users.root,
+    {
+      method: #POST,
+      headers: Helpers.addJsonToContentType()->Headers.Init.array->Headers.make,
+      body,
+    },
   )
-
-  Endpoints.Users.root
-  ->fetchWithInit(_, requestInit)
   ->then(parseJsonIfOk)
   ->then(getErrorBodyJson)
   ->then(result =>
