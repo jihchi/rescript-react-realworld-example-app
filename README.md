@@ -35,7 +35,7 @@ pnpm install
 pnpm start
 ```
 
-Then open http://localhost:3000 to see your app.
+Then open http://localhost:5173 to see your app.
 
 When you’re ready to deploy to production, create a production build with `pnpm run build` and you will find result in folder `/dist`, after you created a production build, you can execute `pnpm run serve` to serve the folder.
 
