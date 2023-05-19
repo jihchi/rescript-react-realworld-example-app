@@ -91,7 +91,7 @@ let make = (~user: option<Shape.User.t>) => {
           | Loading => React.null
           | Reloading(Ok({articles})) | Complete(Ok({articles})) =>
             articles
-            ->Js.Array2.map(item =>
+            ->Array.map(item =>
               <ArticlePreview
                 key=item.slug
                 data=item

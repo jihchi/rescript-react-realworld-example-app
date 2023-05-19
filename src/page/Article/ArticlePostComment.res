@@ -12,10 +12,7 @@ let make = (
   let (comment, setComment) = React.useState(() => AsyncData.complete(""))
   let body = comment->AsyncData.getValue->Option.getWithDefault("")
   let isCommentValid =
-    comment
-    ->AsyncData.getValue
-    ->Option.map(v => Js.String.trim(v) != "")
-    ->Option.getWithDefault(false)
+    comment->AsyncData.getValue->Option.map(v => String.trim(v) != "")->Option.getWithDefault(false)
 
   let handlePostCommentClick = async () => {
     if isCommentValid && AsyncData.isComplete(comment) {
@@ -24,7 +21,7 @@ let make = (
       | Ok(comment) =>
         setComments(prev =>
           prev->AsyncResult.map(comments => {
-            let _ = comments->Js.Array2.unshift(comment)
+            let _ = comments->Array.unshift(comment)
             comments
           })
         )

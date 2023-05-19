@@ -51,7 +51,7 @@ let make = (~setUser) => {
           | Some(messages) =>
             <ul className="error-messages">
               {messages
-              ->Js.Array2.map(message =>
+              ->Array.map(message =>
                 <li key=message> {`email or password ${message}`->React.string} </li>
               )
               ->React.array}

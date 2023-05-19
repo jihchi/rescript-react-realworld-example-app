@@ -8,7 +8,7 @@ let make = (~data: AsyncResult.t<Shape.Tags.t, AppError.t>, ~onClick) => <>
       | Loading => React.string("Loading...")
       | Reloading(Ok(tags)) | Complete(Ok(tags)) =>
         tags
-        ->Js.Array2.map(tag =>
+        ->Array.map(tag =>
           <a
             key=tag
             href="#"

@@ -1,32 +1,35 @@
 type cookiePair = (string, option<string>)
 
-let parseCookies: unit => array<cookiePair> = () =>
-  Webapi.Dom.document
-  ->Webapi.Dom.Document.asHtmlDocument
-  ->Option.getExn
-  ->Webapi.Dom.HtmlDocument.cookie
-  ->Js.String2.split(";")
-  ->Js.Array2.reduce((acc, str) => {
-    let pair = str->Js.String2.split("=")->Js.Array2.map(Js.String.trim)
-    let key = pair->Array.getUnsafe(0)
-    let value = pair->Array.get(1)
+let parseCookies = (): array<cookiePair> => {
+  let cookie =
+    Webapi.Dom.document
+    ->Webapi.Dom.Document.asHtmlDocument
+    ->Option.getExn
+    ->Webapi.Dom.HtmlDocument.cookie
 
-    acc->Js.Array2.concat([(key, value)])
-  }, [])
+  cookie
+  ->String.split(";")
+  ->Array.map(segment => {
+    let pair = segment->String.split("=")
+    let key = pair->Array.get(0)->Option.getExn
+    let value = pair->Array.get(1)
+    (key, value)
+  })
+}
 
 let getCookie = (name: string): option<cookiePair> =>
-  parseCookies()->Js.Array2.find(pair => {
+  parseCookies()->Array.find(pair => {
     let key = fst(pair)
     key == name
   })
 
-let setCookieRaw: (
+let setCookieRaw = (
   ~key: string,
-  ~value: string=?,
+  ~value: option<string>=?,
   ~expires: string,
-  ~path: string=?,
-  unit,
-) => unit = (~key, ~value=?, ~expires, ~path=?, ()) => {
+  ~path: option<string>=?,
+  (),
+): unit => {
   let htmlDocument = Webapi.Dom.document->Webapi.Dom.Document.asHtmlDocument->Option.getExn
 
   let value = value->Option.getWithDefault("")
@@ -41,7 +44,7 @@ let setCookieRaw: (
   Webapi.Dom.HtmlDocument.setCookie(htmlDocument, cookie)
 }
 
-let setCookie: (string, option<string>) => unit = (key, value) => {
+let setCookie = (key: string, value: option<string>): unit => {
   open Constant
 
   let expires = Js.Date.make()
@@ -50,18 +53,21 @@ let setCookie: (string, option<string>) => unit = (key, value) => {
   setCookieRaw(~key, ~value?, ~expires=expires->Js.Date.toUTCString, ~path="/", ())
 }
 
-let deleteCookie: string => unit = key =>
+let deleteCookie = (key: string): unit =>
   setCookieRaw(~key, ~expires="Thu, 01 Jan 1970 00:00:01 GMT", ())
 
-let isMouseRightClick = event =>
-  !ReactEvent.Mouse.defaultPrevented(event) &&
-  ReactEvent.Mouse.button(event) == 0 &&
-  !ReactEvent.Mouse.altKey(event) &&
-  !ReactEvent.Mouse.ctrlKey(event) &&
-  !ReactEvent.Mouse.metaKey(event) &&
-  !ReactEvent.Mouse.shiftKey(event)
+let isMouseRightClick = event => {
+  open ReactEvent
 
-let formatDate: Js.Date.t => string = date => {
+  !Mouse.defaultPrevented(event) &&
+  Mouse.button(event) == 0 &&
+  !Mouse.altKey(event) &&
+  !Mouse.ctrlKey(event) &&
+  !Mouse.metaKey(event) &&
+  !Mouse.shiftKey(event)
+}
+
+let formatDate = (date: Js.Date.t): string => {
   let yyyy = date->Js.Date.getFullYear->Int.fromFloat->Int.toString
   let mm = date->Js.Date.getMonth->Int.fromFloat->Int.toString
   let dd = date->Js.Date.getDate->Int.fromFloat->Int.toString

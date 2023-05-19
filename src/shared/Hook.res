@@ -133,7 +133,7 @@ let useArticle = (~slug: string): (
         _prev =>
           switch data {
           | Ok(ok: Shape.Article.t) =>
-            AsyncResult.completeOk((ok, ok.tagList->Js.Array2.joinWith(","), None))
+            AsyncResult.completeOk((ok, ok.tagList->Array.joinWith(","), None))
           | Error(error) => AsyncResult.completeError(error)
           },
       )->Promise.resolve

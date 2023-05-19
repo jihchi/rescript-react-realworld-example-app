@@ -3,12 +3,12 @@ let make = (~limit: int, ~offset: int, ~total: int, ~onClick: int => unit) =>
   if total == 0 {
     React.null
   } else {
-    let pages = Js.Math.ceil(float_of_int(total) /. float_of_int(limit)) - 1
+    let pages = Float.toInt(Math.ceil(Int.toFloat(total) /. Int.toFloat(limit))) - 1
 
     <WithTestId id="page-link">
       <ul className="pagination">
         {Belt.Array.range(0, pages)
-        ->Js.Array2.map(page => {
+        ->Array.map(page => {
           let className = if (offset == 0 && page == 0) || page == offset / limit {
             "page-item active"
           } else {
