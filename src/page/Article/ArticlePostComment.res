@@ -10,12 +10,29 @@ let make = (
   ) => unit,
 ) => {
   let (comment, setComment) = React.useState(() => AsyncData.complete(""))
+  let body = comment->AsyncData.getValue->Option.getWithDefault("")
   let isCommentValid =
     comment
     ->AsyncData.getValue
     ->Option.map(v => Js.String.trim(v) != "")
     ->Option.getWithDefault(false)
-  let body = comment->AsyncData.getValue->Option.getWithDefault("")
+
+  let handlePostCommentClick = async () => {
+    if isCommentValid && AsyncData.isComplete(comment) {
+      setComment(AsyncData.toBusy)
+      switch await API.addComment(~slug, ~body, ()) {
+      | Ok(comment) =>
+        setComments(prev =>
+          prev->AsyncResult.map(comments => {
+            let _ = comments->Js.Array2.unshift(comment)
+            comments
+          })
+        )
+        setComment(_prev => AsyncData.complete(""))
+      | Error(_error) => setComment(AsyncData.toIdle)
+      }
+    }
+  }
 
   <form className="card comment-form">
     <div className="card-block">
@@ -40,33 +57,9 @@ let make = (
         className="btn btn-sm btn-primary"
         disabled={!isCommentValid}
         onClick={event => {
-          if isCommentValid && AsyncData.isComplete(comment) {
-            setComment(AsyncData.toBusy)
-            API.addComment(~slug, ~body, ())
-            ->Promise.then(x => {
-              switch x {
-              | Ok(comment) =>
-                setComments(prev =>
-                  prev->AsyncResult.map(
-                    comments => {
-                      let _ = comments->Js.Array2.unshift(comment)
-                      comments
-                    },
-                  )
-                )
-                setComment(_prev => AsyncData.complete(""))
-              | Error(_error) => setComment(AsyncData.toIdle)
-              }
-              Promise.resolve()
-            })
-            ->Promise.catch(_error => {
-              setComment(AsyncData.toIdle)
-              Promise.resolve()
-            })
-            ->ignore
-          }
           event->ReactEvent.Mouse.preventDefault
           event->ReactEvent.Mouse.stopPropagation
+          handlePostCommentClick()->ignore
         }}>
         {"Post Comment"->React.string}
       </button>

@@ -185,45 +185,43 @@ module Create = {
   let make = () => {
     let (article, setArticle) = React.useState(() => AsyncResult.completeOk(empty))
 
+    let handleSumbit = async (~article, ~tagList) => {
+      setArticle(AsyncResult.toBusy)
+
+      switch await API.article(~action=Create({...article, tagList: parseTagList(tagList)}), ()) {
+      | Ok(ok: Shape.Article.t) =>
+        Link.article(~slug=ok.slug)->Link.push
+        setArticle(prev => prev->AsyncResult.toIdle)
+      | Error(AppError.Fetch((_code, _message, #json(json)))) =>
+        try {
+          let result =
+            json
+            ->Js.Json.decodeObject
+            ->Option.getExn
+            ->Js.Dict.get("errors")
+            ->Option.getExn
+            ->Shape.Editor.decode
+          switch result {
+          | Ok(errors) =>
+            setArticle(prev =>
+              prev
+              ->AsyncData.toIdle
+              ->AsyncResult.map(((article, tagList, _error)) => (article, tagList, Some(errors)))
+            )
+          | Error(_e) => ignore()
+          }
+        } catch {
+        | _ => Js.log("Button.UpdateSettings: failed to decode json")
+        }
+      | Error(Fetch((_, _, #text(_)))) | Error(Decode(_)) => setArticle(AsyncResult.toIdle)
+      }
+    }
+
     <Form
       data=article
       setData=setArticle
       onSubmit={((article, tagList)) => {
-        setArticle(AsyncResult.toBusy)
-        API.article(~action=Create({...article, tagList: parseTagList(tagList)}), ())
-        ->Promise.then(x => {
-          switch x {
-          | Ok(ok: Shape.Article.t) =>
-            Link.article(~slug=ok.slug)->Link.push
-            setArticle(prev => prev->AsyncResult.toIdle)
-          | Error(AppError.Fetch((_code, _message, #json(json)))) =>
-            try {
-              let result =
-                json
-                ->Js.Json.decodeObject
-                ->Option.getExn
-                ->Js.Dict.get("errors")
-                ->Option.getExn
-                ->Shape.Editor.decode
-              switch result {
-              | Ok(errors) =>
-                setArticle(prev =>
-                  prev
-                  ->AsyncData.toIdle
-                  ->AsyncResult.map(
-                    ((article, tagList, _error)) => (article, tagList, Some(errors)),
-                  )
-                )
-              | Error(_e) => ignore()
-              }
-            } catch {
-            | _ => Js.log("Button.UpdateSettings: failed to decode json")
-            }
-          | Error(Fetch((_, _, #text(_)))) | Error(Decode(_)) => setArticle(AsyncResult.toIdle)
-          }
-          Promise.resolve()
-        })
-        ->ignore
+        handleSumbit(~article, ~tagList)->ignore
       }}
     />
   }
@@ -234,17 +232,20 @@ module Edit = {
   let make = (~slug: string) => {
     let (article, setArticle) = Hook.useArticle(~slug)
 
+    let handleSubmit = async (~article, ~tagList) => {
+      setArticle(AsyncResult.toBusy)
+      let _ = await API.article(
+        ~action=Update(slug, {...article, tagList: parseTagList(tagList)}),
+        (),
+      )
+      setArticle(AsyncResult.toIdle)
+    }
+
     <Form
       data=article
       setData=setArticle
       onSubmit={((article, tagList)) => {
-        setArticle(AsyncResult.toBusy)
-        API.article(~action=Update(slug, {...article, tagList: parseTagList(tagList)}), ())
-        ->Promise.then(_x => {
-          setArticle(AsyncResult.toIdle)
-          Promise.resolve()
-        })
-        ->ignore
+        handleSubmit(~article, ~tagList)->ignore
       }}
     />
   }

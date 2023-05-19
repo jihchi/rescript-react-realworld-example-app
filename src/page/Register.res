@@ -12,6 +12,46 @@ let make = (~setUser) => {
   let isBusy = data->AsyncData.isBusy
   let (form, error) = data->AsyncData.getValue->Option.getWithDefault(empty)
 
+  let handleSignupClick = async () => {
+    if isBusy {
+      ignore()
+    } else {
+      setData(AsyncData.toBusy)
+      switch await API.register(
+        ~username=form.username,
+        ~email=form.email,
+        ~password=form.password,
+        (),
+      ) {
+      | Ok(user: Shape.User.t) =>
+        setUser(_prev => Some(user)->AsyncData.complete)
+        setData(AsyncData.toIdle)
+        Utils.setCookie(Constant.Auth.tokenCookieName, Some(user.token))
+        Link.home->Link.push
+      | Error(AppError.Fetch((_code, _message, #json(json)))) =>
+        try {
+          let result =
+            json
+            ->Js.Json.decodeObject
+            ->Option.getExn
+            ->Js.Dict.get("errors")
+            ->Option.getExn
+            ->Shape.Register.decode
+          switch result {
+          | Ok(errors) =>
+            setData(prev =>
+              prev->AsyncData.toIdle->AsyncData.map(((form, _error)) => (form, Some(errors)))
+            )
+          | Error(_e) => ignore()
+          }
+        } catch {
+        | _ => Js.log("Button.UpdateSettings: failed to decode json")
+        }
+      | Error(Fetch((_, _, #text(_)))) | Error(Decode(_)) => setData(AsyncData.toIdle)
+      }
+    }
+  }
+
   <div className="auth-page">
     <div className="container page">
       <div className="row">
@@ -79,51 +119,7 @@ let make = (~setUser) => {
               onClick={event => {
                 event->ReactEvent.Mouse.preventDefault
                 event->ReactEvent.Mouse.stopPropagation
-
-                if isBusy {
-                  ignore()
-                } else {
-                  setData(AsyncData.toBusy)
-                  API.register(
-                    ~username=form.username,
-                    ~email=form.email,
-                    ~password=form.password,
-                    (),
-                  )
-                  ->Promise.then(x => {
-                    switch x {
-                    | Ok(user: Shape.User.t) =>
-                      setUser(_prev => Some(user)->AsyncData.complete)
-                      setData(AsyncData.toIdle)
-                      Utils.setCookie("jwtToken", Some(user.token))
-                      Link.home->Link.push
-                    | Error(AppError.Fetch((_code, _message, #json(json)))) =>
-                      try {
-                        let result =
-                          json
-                          ->Js.Json.decodeObject
-                          ->Option.getExn
-                          ->Js.Dict.get("errors")
-                          ->Option.getExn
-                          ->Shape.Register.decode
-                        switch result {
-                        | Ok(errors) =>
-                          setData(prev =>
-                            prev
-                            ->AsyncData.toIdle
-                            ->AsyncData.map(((form, _error)) => (form, Some(errors)))
-                          )
-                        | Error(_e) => ignore()
-                        }
-                      } catch {
-                      | _ => Js.log("Button.UpdateSettings: failed to decode json")
-                      }
-                    | Error(Fetch((_, _, #text(_)))) | Error(Decode(_)) => setData(AsyncData.toIdle)
-                    }
-                    Promise.resolve()
-                  })
-                  ->ignore
-                }
+                handleSignupClick()->ignore
               }}>
               {"Sign up"->React.string}
             </button>

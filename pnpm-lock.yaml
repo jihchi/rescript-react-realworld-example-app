@@ -1,15 +1,15 @@
 lockfileVersion: '6.0'
 
 dependencies:
+  '@glennsl/rescript-fetch':
+    specifier: ^0.2.0
+    version: 0.2.0
   '@rescript/core':
     specifier: ^0.3.1
-    version: 0.3.1(rescript@10.1.4)
+    version: 0.3.1(rescript@11.0.0-alpha.6)
   '@rescript/react':
     specifier: ^0.11.0
     version: 0.11.0(react-dom@18.2.0)(react@18.2.0)
-  bs-fetch:
-    specifier: ^0.6.2
-    version: 0.6.2
   dompurify:
     specifier: ^3.0.3
     version: 3.0.3
@@ -23,8 +23,8 @@ dependencies:
     specifier: ^18.2.0
     version: 18.2.0(react@18.2.0)
   rescript:
-    specifier: ^10.1.4
-    version: 10.1.4
+    specifier: 11.0.0-alpha.6
+    version: 11.0.0-alpha.6
   rescript-webapi:
     specifier: ^0.8.0
     version: 0.8.0
@@ -32,7 +32,7 @@ dependencies:
 devDependencies:
   '@jihchi/vite-plugin-rescript':
     specifier: ^5.3.0
-    version: 5.3.0(rescript@10.1.4)(vite@4.3.8)
+    version: 5.3.0(rescript@11.0.0-alpha.6)(vite@4.3.8)
   '@vitejs/plugin-react':
     specifier: ^3.1.0
     version: 3.1.0(vite@4.3.8)
@@ -470,7 +470,11 @@ packages:
     dev: true
     optional: true
 
-  /@jihchi/vite-plugin-rescript@5.3.0(rescript@10.1.4)(vite@4.3.8):
+  /@glennsl/rescript-fetch@0.2.0:
+    resolution: {integrity: sha512-0tsEqJ/6/WBm02prM4RYG+qpnNTaB8QKKIeQHXdDaE4C5YfA/nzjxMNW3CjsGIaEgyrAmmIXFS0kx24UjvOI6A==}
+    dev: false
+
+  /@jihchi/vite-plugin-rescript@5.3.0(rescript@11.0.0-alpha.6)(vite@4.3.8):
     resolution: {integrity: sha512-H9YDEN2me+yR9lQ7m7RfLG4igTW1tY1ud44Xatv+ZSs4zHbcTLRP235yK4ceXbJFzKNxAXUSgK+7whglt6i/Yw==}
     engines: {node: ^14 || >=16.0.0}
     peerDependencies:
@@ -480,7 +484,7 @@ packages:
       chalk: 4.1.2
       execa: 5.1.1
       npm-run-path: 4.0.1
-      rescript: 10.1.4
+      rescript: 11.0.0-alpha.6
       vite: 4.3.8
     dev: true
 
@@ -522,12 +526,12 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.14
     dev: true
 
-  /@rescript/core@0.3.1(rescript@10.1.4):
+  /@rescript/core@0.3.1(rescript@11.0.0-alpha.6):
     resolution: {integrity: sha512-H6KgYKCpaWQEyhl/r3HuTxY0y1pvQziMXbZnwHVsykNkJvxpROMOrAX2CkIJ5lIar3zDH33cPpwTsIxANTFcvQ==}
     peerDependencies:
       rescript: ^10.1.0 || ^11.0.0-alpha.0 || next
     dependencies:
-      rescript: 10.1.4
+      rescript: 11.0.0-alpha.6
     dev: false
 
   /@rescript/react@0.11.0(react-dom@18.2.0)(react@18.2.0):
@@ -580,10 +584,6 @@ packages:
       node-releases: 2.0.8
       update-browserslist-db: 1.0.10(browserslist@4.21.4)
     dev: true
-
-  /bs-fetch@0.6.2:
-    resolution: {integrity: sha512-VXEjp8kY3vHPckaoy3d96Bx0KYjJAPLNISBwfpwMN26K6DtuZYwI2HKhx7zeHBajz1bRArfx7O8OOLcdtujMvg==}
-    dev: false
 
   /caniuse-lite@1.0.30001449:
     resolution: {integrity: sha512-CPB+UL9XMT/Av+pJxCKGhdx+yg1hzplvFJQlJ2n68PyQGMz9L/E2zCyLdOL8uasbouTUgnPl+y0tccI/se+BEw==}
@@ -890,8 +890,9 @@ packages:
     resolution: {integrity: sha512-PdjHqho8+kI7AIC3DlLgD99H8zzHphzpIhyv2skVtWaSJGK819+ZqWMC3mHEtSjlcFoYaLXliNt8sb6Taa2Mpg==}
     dev: false
 
-  /rescript@10.1.4:
-    resolution: {integrity: sha512-FFKlS9AG/XrLepWsyw7B+A9DtQBPWEPDPDKghV831Y2KGbie+eeFBOS0xtRHp0xbt7S0N2Dm6hhX+kTZQ/3Ybg==}
+  /rescript@11.0.0-alpha.6:
+    resolution: {integrity: sha512-516p5A+ybndzdxjKbOVJNrSd+p+U3FZ5Lm9U7SfGREzJXKACY3e69dk9ey/wDO4fh6Ge8j+NIXhHOTjFhMx4sw==}
+    engines: {node: '>=10'}
     hasBin: true
     requiresBuild: true
 

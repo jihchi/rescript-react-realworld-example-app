@@ -22,9 +22,9 @@
     }
   ],
   "bs-dependencies": [
-    "@rescript/react",
+    "@glennsl/rescript-fetch",
     "@rescript/core",
-    "bs-fetch",
+    "@rescript/react",
     "rescript-webapi"
   ],
   "bs-dev-dependencies": []

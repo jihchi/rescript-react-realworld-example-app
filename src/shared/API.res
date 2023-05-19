@@ -17,23 +17,34 @@ module Action = {
     | Unfavorite(string)
 }
 
-module Headers = {
-  let addJwtToken: unit => array<(string, string)> = () =>
-    Utils.getCookie("jwtToken")
-    ->Option.flatMap(snd)
-    ->Option.map(token => [("Authorization", `Token ${token}`)])
-    ->Option.getWithDefault([])
+type parsedBody = result<Js.Json.t, Response.t>
+type extractedError = result<Js.Json.t, AppError.t>
 
-  let addContentTypeAsJson: unit => array<(string, string)> = () => [
-    ("Content-Type", "application/json; charset=UTF-8"),
-  ]
+let addJwtAuthorization = (): array<(string, string)> => {
+  Utils.getCookie(Constant.Auth.tokenCookieName)
+  ->Option.flatMap(snd)
+  ->Option.map(token => [("Authorization", `Token ${token}`)])
+  ->Option.getWithDefault([])
 }
 
-let getErrorBodyJson: result<Js.Json.t, Response.t> => Promise.t<
-  result<Js.Json.t, AppError.t>,
-> = x =>
-  switch x {
-  | Ok(_json) as ok => ok->resolve
+let addJsonContentType = (): array<(string, string)> => {
+  [("Content-Type", "application/json; charset=UTF-8")]
+}
+
+let parseBodyAsJson = (response: Response.t): Promise.t<parsedBody> => {
+  if Response.ok(response) {
+    response
+    ->Response.json
+    ->then(json => json->Ok->resolve)
+    ->catch(_error => response->Result.Error->resolve)
+  } else {
+    response->Result.Error->resolve
+  }
+}
+
+let extractJsonError = (result: parsedBody): Promise.t<extractedError> => {
+  switch result {
+  | Ok(json) => json->Result.Ok->resolve
   | Error(resp) =>
     resp
     ->Response.json
@@ -45,34 +56,49 @@ let getErrorBodyJson: result<Js.Json.t, Response.t> => Promise.t<
       AppError.fetch((status, statusText, bodyJson))->Result.Error->resolve
     })
   }
+}
 
-let getErrorBodyText: result<Js.Json.t, Response.t> => Promise.t<
-  result<Js.Json.t, AppError.t>,
-> = x =>
-  switch x {
-  | Ok(_json) as ok => ok->resolve
+let extractTextError = (result: parsedBody): Promise.t<extractedError> => {
+  switch result {
+  | Ok(json) => json->Result.Ok->resolve
   | Error(resp) =>
-    let status = Response.status(resp)
-    let statusText = Response.statusText(resp)
-    let bodyText = #text("FIXME: show body text instead")
-
-    AppError.fetch((status, statusText, bodyText))->Result.Error->resolve
-  }
-
-let parseJsonIfOk: Response.t => Promise.t<result<Js.Json.t, Response.t>> = resp =>
-  if Response.ok(resp) {
     resp
-    ->Response.json
-    ->then(json => json->Ok->resolve)
-    ->catch(_error => resp->Result.Error->resolve)
-  } else {
-    resp->Result.Error->resolve
+    ->Response.text
+    ->then(text => {
+      let status = Response.status(resp)
+      let statusText = Response.statusText(resp)
+      let bodyText = #text(text)
+
+      AppError.fetch((status, statusText, bodyText))->Result.Error->resolve
+    })
+  }
+}
+
+let article = async (~action: Action.article, ()): result<Shape.Article.t, AppError.t> => {
+  let url = Endpoints.Articles.article(
+    ~slug=switch action {
+    | Create(_) => ""
+    | Read(slug) | Update(slug, _) | Delete(slug) => slug
+    },
+    (),
+  )
+
+  let method = switch action {
+  | Create(_) => #POST
+  | Read(_) => #GET
+  | Update(_) => #PUT
+  | Delete(_) => #DELETE
   }
 
-let article: (~action: Action.article, unit) => Promise.t<result<Shape.Article.t, AppError.t>> = (
-  ~action,
-  (),
-) => {
+  let headers =
+    switch action {
+    | Create(_) | Update(_) => addJsonContentType()
+    | Read(_) | Delete(_) => []
+    }
+    ->Array.concat(addJwtAuthorization())
+    ->Headers.Init.array
+    ->Headers.make
+
   let body = switch action {
   | Create(article) | Update(_, article) =>
     let article =
@@ -85,170 +111,160 @@ let article: (~action: Action.article, unit) => Promise.t<result<Shape.Article.t
       ->Js.Dict.fromList
       ->Js.Json.object_
 
-    list{("article", article)}
-    ->Js.Dict.fromList
-    ->Js.Json.object_
-    ->Js.Json.stringify
-    ->BodyInit.make
-    ->Some
-  | Read(_) | Delete(_) => None
+    list{("article", article)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
+  | Read(_) | Delete(_) => Body.none
   }
 
-  let method__ = switch action {
-  | Create(_) => Post
-  | Read(_) => Get
-  | Update(_) => Put
-  | Delete(_) => Delete
-  }
-
-  let headers =
-    switch action {
-    | Create(_) | Update(_) => Headers.addContentTypeAsJson()
-    | Read(_) | Delete(_) => []
-    }
-    ->Array.concat(Headers.addJwtToken())
-    ->HeadersInit.makeWithArray
-
-  let slug = switch action {
-  | Create(_) => ""
-  | Read(slug) | Update(slug, _) | Delete(slug) => slug
-  }
-
-  fetchWithInit(
-    Endpoints.Articles.article(~slug, ()),
-    RequestInit.make(~method_=method__, ~headers, ~body?, ()),
+  let res = await fetch(
+    url,
+    {
+      method,
+      headers,
+      body,
+    },
   )
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyJson)
-  ->then(result => {
-    result
-    ->Result.flatMap(json => {
-      try {
-        json
-        ->Js.Json.decodeObject
-        ->Option.getExn
-        ->Js.Dict.get("article")
-        ->Option.getExn
-        ->Shape.Article.decode
-        ->AppError.decode
-      } catch {
-      | _ => AppError.decode(Error("API.article: failed to decode json"))
-      }
-    })
-    ->resolve
+  let res = await parseBodyAsJson(res)
+  let res = await extractJsonError(res)
+
+  res->Result.flatMap(json => {
+    try {
+      json
+      ->Js.Json.decodeObject
+      ->Option.getExn
+      ->Js.Dict.get("article")
+      ->Option.getExn
+      ->Shape.Article.decode
+      ->AppError.decode
+    } catch {
+    | _ => AppError.decode(Error("API.article: failed to decode json"))
+    }
   })
 }
 
-let favoriteArticle: (
-  ~action: Action.favorite,
-  unit,
-) => Promise.t<result<Shape.Article.t, AppError.t>> = (~action, ()) => {
-  let requestInit = RequestInit.make(
-    ~method_=switch action {
-    | Favorite(_slug) => Post
-    | Unfavorite(_slug) => Delete
-    },
-    ~headers=Headers.addJwtToken()->HeadersInit.makeWithArray,
-    (),
-  )
-
-  Endpoints.Articles.favorite(
+let favoriteArticle = async (~action: Action.favorite, ()): result<Shape.Article.t, AppError.t> => {
+  let url = Endpoints.Articles.favorite(
     ~slug=switch action {
     | Favorite(slug) => slug
     | Unfavorite(slug) => slug
     },
     (),
   )
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyText)
-  ->then(result =>
-    result
-    ->Result.flatMap(json =>
-      try {
-        json
-        ->Js.Json.decodeObject
-        ->Option.getExn
-        ->Js.Dict.get("article")
-        ->Option.getExn
-        ->Shape.Article.decode
-        ->AppError.decode
-      } catch {
-      | _ => AppError.decode(Error("API.favoriteArticle: failed to decode json"))
-      }
-    )
-    ->resolve
+
+  let method = switch action {
+  | Favorite(_slug) => #POST
+  | Unfavorite(_slug) => #DELETE
+  }
+
+  let headers = addJwtAuthorization()->Headers.Init.array->Headers.make
+
+  let res = await fetch(
+    url,
+    {
+      method,
+      headers,
+    },
+  )
+  let res = await parseBodyAsJson(res)
+  let res = await extractTextError(res)
+
+  res->Result.flatMap(json =>
+    try {
+      json
+      ->Js.Json.decodeObject
+      ->Option.getExn
+      ->Js.Dict.get("article")
+      ->Option.getExn
+      ->Shape.Article.decode
+      ->AppError.decode
+    } catch {
+    | _ => AppError.decode(Error("API.favoriteArticle: failed to decode json"))
+    }
   )
 }
 
-let listArticles: (
-  ~limit: int=?,
-  ~offset: int=?,
-  ~tag: string=?,
-  ~author: string=?,
-  ~favorited: string=?,
-  unit,
-) => Promise.t<result<Shape.Articles.t, AppError.t>> = (
-  ~limit=10,
-  ~offset=0,
-  ~tag=?,
-  ~author=?,
-  ~favorited=?,
+let listArticles = async (
+  ~limit: int=10,
+  ~offset: int=0,
+  ~tag: option<string>=?,
+  ~author: option<string>=?,
+  ~favorited: option<string>=?,
   (),
-) => {
-  let requestInit = RequestInit.make(~headers=Headers.addJwtToken()->HeadersInit.makeWithArray, ())
+): result<Shape.Articles.t, AppError.t> => {
+  let url = Endpoints.Articles.root(~limit, ~offset, ~tag?, ~author?, ~favorited?, ())
+  let headers = addJwtAuthorization()->Headers.Init.array->Headers.make
 
-  Endpoints.Articles.root(~limit, ~offset, ~tag?, ~author?, ~favorited?, ())
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyText)
-  ->then(result =>
-    result->Result.flatMap(json => json->Shape.Articles.decode->AppError.decode)->resolve
+  let res = await fetch(
+    url,
+    {
+      headers: headers,
+    },
   )
+  let res = await parseBodyAsJson(res)
+  let res = await extractTextError(res)
+
+  res->Result.flatMap(json => json->Shape.Articles.decode->AppError.decode)
 }
 
-let feedArticles: (
-  ~limit: int=?,
-  ~offset: int=?,
-  unit,
-) => Promise.t<result<Shape.Articles.t, AppError.t>> = (~limit=10, ~offset=0, ()) => {
-  let requestInit = RequestInit.make(~headers=Headers.addJwtToken()->HeadersInit.makeWithArray, ())
+let feedArticles = async (~limit: int=10, ~offset: int=0, ()): result<
+  Shape.Articles.t,
+  AppError.t,
+> => {
+  let url = Endpoints.Articles.feed(~limit, ~offset, ())
+  let headers = addJwtAuthorization()->Headers.Init.array->Headers.make
 
-  Endpoints.Articles.feed(~limit, ~offset, ())
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyText)
-  ->then(result =>
-    result->Result.flatMap(json => json->Shape.Articles.decode->AppError.decode)->resolve
+  let res = await fetch(
+    url,
+    {
+      headers: headers,
+    },
   )
+
+  let res = await parseBodyAsJson(res)
+  let res = await extractTextError(res)
+
+  res->Result.flatMap(json => json->Shape.Articles.decode->AppError.decode)
 }
 
-let tags: unit => Promise.t<result<Shape.Tags.t, AppError.t>> = () =>
-  Endpoints.tags
-  ->fetch
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyText)
-  ->then(result =>
-    result->Result.flatMap(json => json->Shape.Tags.decode->AppError.decode)->resolve
+let tags = async (): result<Shape.Tags.t, AppError.t> => {
+  let url = Endpoints.tags()
+  let method = #GET
+
+  let res = await fetch(
+    url,
+    {
+      method: method,
+    },
   )
 
-let currentUser: unit => Promise.t<result<Shape.User.t, AppError.t>> = () => {
-  let requestInit = RequestInit.make(~headers=Headers.addJwtToken()->HeadersInit.makeWithArray, ())
+  let res = await parseBodyAsJson(res)
+  let res = await extractTextError(res)
 
-  Endpoints.user
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyText)
-  ->then(result =>
-    result->Result.flatMap(json => json->Shape.User.decode->AppError.decode)->resolve
-  )
+  res->Result.flatMap(json => json->Shape.Tags.decode->AppError.decode)
 }
 
-let updateUser: (
-  ~user: Shape.User.t,
-  ~password: string,
-  unit,
-) => Promise.t<result<Shape.User.t, AppError.t>> = (~user, ~password, ()) => {
+let currentUser = async (): result<Shape.User.t, AppError.t> => {
+  let url = Endpoints.user()
+  let headers = addJwtAuthorization()->Headers.Init.array->Headers.make
+
+  let res = await fetch(
+    url,
+    {
+      headers: headers,
+    },
+  )
+
+  let res = await parseBodyAsJson(res)
+  let res = await extractTextError(res)
+
+  res->Result.flatMap(json => json->Shape.User.decode->AppError.decode)
+}
+
+let updateUser = async (~user: Shape.User.t, ~password: string, ()): result<
+  Shape.User.t,
+  AppError.t,
+> => {
+  let url = Endpoints.user()
+
   let user =
     list{
       list{("email", Js.Json.string(user.email))},
@@ -264,205 +280,213 @@ let updateUser: (
     ->List.flatten
     ->Js.Dict.fromList
     ->Js.Json.object_
-  let body =
-    list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->BodyInit.make
 
-  let requestInit = RequestInit.make(
-    ~method_=Put,
-    ~headers=Headers.addJwtToken()
-    ->Array.concat(Headers.addContentTypeAsJson())
-    ->HeadersInit.makeWithArray,
-    ~body,
-    (),
-  )
+  let method = #PUT
 
-  Endpoints.user
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyJson)
-  ->then(result =>
-    result->Result.flatMap(json => json->Shape.User.decode->AppError.decode)->resolve
+  let headers =
+    addJwtAuthorization()->Array.concat(addJsonContentType())->Headers.Init.array->Headers.make
+
+  let body = list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
+
+  let res = await fetch(
+    url,
+    {
+      method,
+      headers,
+      body,
+    },
   )
+  let res = await parseBodyAsJson(res)
+  let res = await extractJsonError(res)
+
+  res->Result.flatMap(json => json->Shape.User.decode->AppError.decode)
 }
 
-let followUser: (~action: Action.follow, unit) => Promise.t<result<Shape.Author.t, AppError.t>> = (
-  ~action,
-  (),
-) => {
-  let requestInit = RequestInit.make(
-    ~method_=switch action {
-    | Follow(_username) => Post
-    | Unfollow(_username) => Delete
-    },
-    ~headers=Headers.addJwtToken()->HeadersInit.makeWithArray,
-    (),
-  )
-
-  Endpoints.Profiles.follow(
+let followUser = async (~action: Action.follow, ()): result<Shape.Author.t, AppError.t> => {
+  let url = Endpoints.Profiles.follow(
     ~username=switch action {
     | Follow(username) | Unfollow(username) => username
     },
     (),
   )
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyText)
-  ->then(result =>
-    result
-    ->Result.flatMap(json => {
-      try {
-        json
-        ->Js.Json.decodeObject
-        ->Option.getExn
-        ->Js.Dict.get("profile")
-        ->Option.getExn
-        ->Shape.Author.decode
-        ->AppError.decode
-      } catch {
-      | _ => AppError.decode(Result.Error("API.followUser: failed to decode json"))
-      }
-    })
-    ->resolve
-  )
-}
 
-let getComments: (~slug: string, unit) => Promise.t<result<array<Shape.Comment.t>, AppError.t>> = (
-  ~slug,
-  (),
-) => {
-  let requestInit = RequestInit.make(~headers=Headers.addJwtToken()->HeadersInit.makeWithArray, ())
+  let method = switch action {
+  | Follow(_username) => #POST
+  | Unfollow(_username) => #DELETE
+  }
 
-  Endpoints.Articles.comments(~slug, ())
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyText)
-  ->then(result =>
-    result->Result.flatMap(json => json->Shape.Comment.decode->AppError.decode)->resolve
-  )
-}
+  let headers = addJwtAuthorization()->Headers.Init.array->Headers.make
 
-let deleteComment: (
-  ~slug: string,
-  ~id: int,
-  unit,
-) => Promise.t<result<(string, int), AppError.t>> = (~slug, ~id, ()) => {
-  let requestInit = RequestInit.make(
-    ~method_=Delete,
-    ~headers=Headers.addJwtToken()->HeadersInit.makeWithArray,
-    (),
+  let res = await fetch(
+    url,
+    {
+      method,
+      headers,
+    },
   )
 
-  Endpoints.Articles.comment(~slug, ~id, ())
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyText)
-  ->then(result => result->Result.flatMap(_json => Result.Ok((slug, id)))->resolve)
+  let res = await parseBodyAsJson(res)
+  let res = await extractTextError(res)
+
+  res->Result.flatMap(json => {
+    try {
+      json
+      ->Js.Json.decodeObject
+      ->Option.getExn
+      ->Js.Dict.get("profile")
+      ->Option.getExn
+      ->Shape.Author.decode
+      ->AppError.decode
+    } catch {
+    | _ => AppError.decode(Result.Error("API.followUser: failed to decode json"))
+    }
+  })
 }
 
-let addComment: (
-  ~slug: string,
-  ~body: string,
-  unit,
-) => Promise.t<result<Shape.Comment.t, AppError.t>> = (~slug, ~body, ()) => {
+let getComments = async (~slug: string, ()): result<array<Shape.Comment.t>, AppError.t> => {
+  let url = Endpoints.Articles.comments(~slug, ())
+
+  let headers = addJwtAuthorization()->Headers.Init.array->Headers.make
+
+  let res = await fetch(
+    url,
+    {
+      headers: headers,
+    },
+  )
+  let res = await parseBodyAsJson(res)
+  let res = await extractTextError(res)
+
+  res->Result.flatMap(json => json->Shape.Comment.decode->AppError.decode)
+}
+
+let deleteComment = async (~slug: string, ~id: int, ()): result<(string, int), AppError.t> => {
+  let url = Endpoints.Articles.comment(~slug, ~id, ())
+  let method = #DELETE
+  let headers = addJwtAuthorization()->Headers.Init.array->Headers.make
+
+  let res = await fetch(
+    url,
+    {
+      method,
+      headers,
+    },
+  )
+
+  let res = await parseBodyAsJson(res)
+  let res = await extractTextError(res)
+
+  res->Result.flatMap(_json => Result.Ok((slug, id)))
+}
+
+let addComment = async (~slug: string, ~body: string, ()): result<Shape.Comment.t, AppError.t> => {
+  let url = Endpoints.Articles.comments(~slug, ())
+
+  let method = #POST
+
+  let headers =
+    addJwtAuthorization()->Array.concat(addJsonContentType())->Headers.Init.array->Headers.make
+
   let comment = list{("body", Js.Json.string(body))}->Js.Dict.fromList->Js.Json.object_
 
   let body =
-    list{("comment", comment)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->BodyInit.make
+    list{("comment", comment)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
 
-  let requestInit = RequestInit.make(
-    ~method_=Post,
-    ~headers=Headers.addJwtToken()
-    ->Array.concat(Headers.addContentTypeAsJson())
-    ->HeadersInit.makeWithArray,
-    ~body,
-    (),
+  let res = await fetch(
+    url,
+    {
+      method,
+      headers,
+      body,
+    },
   )
 
-  Endpoints.Articles.comments(~slug, ())
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyText)
-  ->then(result =>
-    result
-    ->Result.flatMap(json => {
-      try {
-        json
-        ->Js.Json.decodeObject
-        ->Option.getExn
-        ->Js.Dict.get("comment")
-        ->Option.getExn
-        ->Shape.Comment.decodeComment
-        ->AppError.decode
-      } catch {
-      | _ => AppError.decode(Result.Error("API.addComment: failed to decode json"))
-      }
-    })
-    ->resolve
-  )
+  let res = await parseBodyAsJson(res)
+  let res = await extractTextError(res)
+
+  res->Result.flatMap(json => {
+    try {
+      json
+      ->Js.Json.decodeObject
+      ->Option.getExn
+      ->Js.Dict.get("comment")
+      ->Option.getExn
+      ->Shape.Comment.decodeComment
+      ->AppError.decode
+    } catch {
+    | _ => AppError.decode(Result.Error("API.addComment: failed to decode json"))
+    }
+  })
 }
 
-let getProfile: (~username: string, unit) => Promise.t<result<Shape.Author.t, AppError.t>> = (
-  ~username,
-  (),
-) => {
-  let requestInit = RequestInit.make(~headers=Headers.addJwtToken()->HeadersInit.makeWithArray, ())
+let getProfile = async (~username: string, ()): result<Shape.Author.t, AppError.t> => {
+  let url = Endpoints.Profiles.profile(~username, ())
 
-  Endpoints.Profiles.profile(~username, ())
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyText)
-  ->then(result =>
-    result
-    ->Result.flatMap(json => {
-      try {
-        json
-        ->Js.Json.decodeObject
-        ->Option.getExn
-        ->Js.Dict.get("profile")
-        ->Option.getExn
-        ->Shape.Author.decode
-        ->AppError.decode
-      } catch {
-      | _ => AppError.decode(Result.Error("API.getProfile: failed to decode json"))
-      }
-    })
-    ->resolve
+  let headers = addJwtAuthorization()->Headers.Init.array->Headers.make
+
+  let res = await fetch(
+    url,
+    {
+      headers: headers,
+    },
   )
+
+  let res = await parseBodyAsJson(res)
+  let res = await extractTextError(res)
+
+  res->Result.flatMap(json => {
+    try {
+      json
+      ->Js.Json.decodeObject
+      ->Option.getExn
+      ->Js.Dict.get("profile")
+      ->Option.getExn
+      ->Shape.Author.decode
+      ->AppError.decode
+    } catch {
+    | _ => AppError.decode(Result.Error("API.getProfile: failed to decode json"))
+    }
+  })
 }
 
-let login = (~email: string, ~password: string, ()): Promise.t<
-  result<Shape.User.t, AppError.t>,
-> => {
+let login = async (~email: string, ~password: string, ()): result<Shape.User.t, AppError.t> => {
+  let url = Endpoints.Users.login()
+
+  let method = #POST
+
+  let headers = addJsonContentType()->Headers.Init.array->Headers.make
+
   let user =
     list{("email", Js.Json.string(email)), ("password", Js.Json.string(password))}
     ->Js.Dict.fromList
     ->Js.Json.object_
 
-  let body =
-    list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->BodyInit.make
+  let body = list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
 
-  let requestInit = RequestInit.make(
-    ~method_=Post,
-    ~headers=Headers.addContentTypeAsJson()->HeadersInit.makeWithArray,
-    ~body,
-    (),
+  let res = await fetch(
+    url,
+    {
+      method,
+      headers,
+      body,
+    },
   )
+  let res = await parseBodyAsJson(res)
+  let res = await extractJsonError(res)
 
-  Endpoints.Users.login
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyJson)
-  ->then(result =>
-    result->Result.flatMap(json => json->Shape.User.decode->AppError.decode)->resolve
-  )
+  res->Result.flatMap(json => json->Shape.User.decode->AppError.decode)
 }
 
-let register: (
-  ~username: string,
-  ~email: string,
-  ~password: string,
-  unit,
-) => Promise.t<result<Shape.User.t, AppError.t>> = (~username, ~email, ~password, ()) => {
+let register = async (~username: string, ~email: string, ~password: string, ()): result<
+  Shape.User.t,
+  AppError.t,
+> => {
+  let url = Endpoints.Users.root()
+
+  let method = #POST
+
+  let headers = addJsonContentType()->Headers.Init.array->Headers.make
+
   let user =
     list{
       ("email", Js.Json.string(email)),
@@ -472,21 +496,19 @@ let register: (
     ->Js.Dict.fromList
     ->Js.Json.object_
 
-  let body =
-    list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->BodyInit.make
+  let body = list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
 
-  let requestInit = RequestInit.make(
-    ~method_=Post,
-    ~headers=Headers.addContentTypeAsJson()->HeadersInit.makeWithArray,
-    ~body,
-    (),
+  let res = await fetch(
+    url,
+    {
+      method,
+      headers,
+      body,
+    },
   )
 
-  Endpoints.Users.root
-  ->fetchWithInit(_, requestInit)
-  ->then(parseJsonIfOk)
-  ->then(getErrorBodyJson)
-  ->then(result =>
-    result->Result.flatMap(json => json->Shape.User.decode->AppError.decode)->resolve
-  )
+  let res = await parseBodyAsJson(res)
+  let res = await extractJsonError(res)
+
+  res->Result.flatMap(json => json->Shape.User.decode->AppError.decode)
 }

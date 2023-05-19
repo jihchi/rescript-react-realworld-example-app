@@ -50,10 +50,10 @@ module Profiles = {
 }
 
 module Users = {
-  let root = `${backend}/api/users`
-  let login = `${backend}/api/users/login`
+  let root = () => `${backend}/api/users`
+  let login = () => `${backend}/api/users/login`
 }
 
-let tags = `${backend}/api/tags`
+let tags = () => `${backend}/api/tags`
 
-let user = `${backend}/api/user`
+let user = () => `${backend}/api/user`

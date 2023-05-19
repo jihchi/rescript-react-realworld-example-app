@@ -1,11 +1,5 @@
 type cookiePair = (string, option<string>)
 
-let secondInMs = 1000.
-let minuteInMs = 60. *. secondInMs
-let hourInMs = 60. *. minuteInMs
-let dayInMs = 24. *. hourInMs
-let monthInMs = 30. *. dayInMs
-
 let parseCookies: unit => array<cookiePair> = () =>
   Webapi.Dom.document
   ->Webapi.Dom.Document.asHtmlDocument
@@ -48,8 +42,10 @@ let setCookieRaw: (
 }
 
 let setCookie: (string, option<string>) => unit = (key, value) => {
+  open Constant
+
   let expires = Js.Date.make()
-  let _ = Js.Date.setTime(expires, Js.Date.getTime(expires) +. monthInMs)
+  let _ = Js.Date.setTime(expires, Js.Date.getTime(expires) +. Duration.monthInMs)
 
   setCookieRaw(~key, ~value?, ~expires=expires->Js.Date.toUTCString, ~path="/", ())
 }

@@ -7,6 +7,42 @@ let make = (
   let isBusy = result->AsyncData.isBusy
   let (form, password, error) = result->AsyncData.getValue->Option.getWithDefault((user, "", None))
 
+  let updateUser = async (~user, ~password) => {
+    setResult(AsyncData.toBusy)
+
+    switch await API.updateUser(~user, ~password, ()) {
+    | Ok(user) =>
+      setResult(prev =>
+        prev->AsyncData.toIdle->AsyncData.map(((_user, _password, _error)) => (user, "", None))
+      )
+      setUser(prev => prev->AsyncData.map(_prev => Some(user)))
+    | Error(AppError.Fetch((_code, _message, #json(json)))) =>
+      try {
+        let result =
+          json
+          ->Js.Json.decodeObject
+          ->Option.getExn
+          ->Js.Dict.get("errors")
+          ->Option.getExn
+          ->Shape.Settings.decode
+        switch result {
+        | Ok(errors) =>
+          setResult(prev =>
+            prev
+            ->AsyncData.toIdle
+            ->AsyncData.map(((user, _password, _error)) => (user, "", Some(errors)))
+          )
+        | Error(_e) => ignore()
+        }
+      } catch {
+      | _ =>
+        Js.log("Button.UpdateSettings: failed to decode json")
+        ignore()
+      }
+    | Error(Fetch((_, _, #text(_)))) | Error(Decode(_)) => ignore()
+    }
+  }
+
   <div className="settings-page">
     <div className="container page">
       <div className="row">
@@ -124,50 +160,7 @@ let make = (
                   event->ReactEvent.Mouse.stopPropagation
                   result
                   ->AsyncData.tapComplete(((user, password, _error)) => {
-                    setResult(AsyncData.toBusy)
-                    API.updateUser(~user, ~password, ())
-                    ->Promise.then(res => {
-                      switch res {
-                      | Ok(user) =>
-                        setResult(
-                          prev =>
-                            prev
-                            ->AsyncData.toIdle
-                            ->AsyncData.map(((_user, _password, _error)) => (user, "", None)),
-                        )
-                        setUser(prev => prev->AsyncData.map(_prev => Some(user)))
-                      | Error(AppError.Fetch((_code, _message, #json(json)))) =>
-                        try {
-                          let result =
-                            json
-                            ->Js.Json.decodeObject
-                            ->Option.getExn
-                            ->Js.Dict.get("errors")
-                            ->Option.getExn
-                            ->Shape.Settings.decode
-                          switch result {
-                          | Ok(errors) =>
-                            setResult(
-                              prev =>
-                                prev
-                                ->AsyncData.toIdle
-                                ->AsyncData.map(
-                                  ((user, _password, _error)) => (user, "", Some(errors)),
-                                ),
-                            )
-                          | Error(_e) => ignore()
-                          }
-                        } catch {
-                        | _ =>
-                          Js.log("Button.UpdateSettings: failed to decode json")
-                          ignore()
-                        }
-                      | Error(Fetch((_, _, #text(_)))) | Error(Decode(_)) => ignore()
-                      }
-
-                      Promise.resolve()
-                    })
-                    ->ignore
+                    updateUser(~user, ~password)->ignore
                   })
                   ->ignore
                 }}>
@@ -186,7 +179,7 @@ let make = (
                 ignore()
               } else {
                 setUser(_prev => AsyncData.complete(None))
-                Utils.deleteCookie("jwtToken")
+                Utils.deleteCookie(Constant.Auth.tokenCookieName)
                 Link.home->Link.push
               }
             }}>
