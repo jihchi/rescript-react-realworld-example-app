@@ -11,7 +11,7 @@ let make = (
   | Complete(Error(_)) => "ERROR"->React.string
   | Reloading(Ok(comments)) | Complete(Ok(comments)) =>
     comments
-    ->Js.Array2.map((comment: Shape.Comment.t) => {
+    ->Array.map((comment: Shape.Comment.t) => {
       let isAPIBusy = Belt.Set.Int.has(busy, comment.id)
 
       <div className="card" key={comment.id->string_of_int}>

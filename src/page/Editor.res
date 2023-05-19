@@ -1,8 +1,5 @@
 let parseTagList = (str: string): array<string> =>
-  str
-  ->Js.String2.split(",")
-  ->Array.map(Js.String2.trim)
-  ->Array.filter(v => Js.String2.length(v) > 0)
+  str->String.split(",")->Array.map(String.trim)->Array.filter(v => String.length(v) > 0)
 
 module Form = {
   @react.component

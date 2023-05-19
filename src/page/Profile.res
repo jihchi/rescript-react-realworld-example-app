@@ -162,7 +162,7 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
           | Reloading(Ok(ok)) | Complete(Ok(ok)) =>
             <>
               {ok.articles
-              ->Js.Array2.map((article: Shape.Article.t) => {
+              ->Array.map((article: Shape.Article.t) => {
                 let isFavoriteBusy = toggleFavoriteBusy->Belt.Set.String.has(_, article.slug)
 
                 <div className="article-preview" key=article.slug>
@@ -213,7 +213,7 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
                     | tagList =>
                       <ul className="tag-list">
                         {tagList
-                        ->Js.Array2.map(tag =>
+                        ->Array.map(tag =>
                           <li key=tag className="tag-default tag-pill tag-outline">
                             {tag->React.string}
                           </li>

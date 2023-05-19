@@ -11,7 +11,7 @@ type t =
 
 let useRoute: unit => t = () => {
   let url = RescriptReactRouter.useUrl()
-  let hash = url.hash->Js.String2.split("/")
+  let hash = url.hash->String.split("/")
 
   switch hash {
   | ["", "settings"] => Settings

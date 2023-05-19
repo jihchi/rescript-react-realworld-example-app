@@ -10,7 +10,7 @@ let make = (~data: Shape.Article.t, ~onToggleFavorite, ~isFavoriteBusy) =>
           className="author" onClick={Link.profile(~username=data.author.username)->Link.location}>
           {data.author.username->React.string}
         </Link>
-        <span className="date"> {data.createdAt->Js.Date.toLocaleString->React.string} </span>
+        <span className="date"> {data.createdAt->Date.toLocaleString->React.string} </span>
       </div>
       <button
         className={data.favorited
@@ -27,7 +27,7 @@ let make = (~data: Shape.Article.t, ~onToggleFavorite, ~isFavoriteBusy) =>
           className={isFavoriteBusy ? "ion-load-a" : "ion-heart"}
           style={ReactDOM.Style.make(~marginRight="3px", ())}
         />
-        {data.favoritesCount->Js.Int.toString->React.string}
+        {data.favoritesCount->Int.toString->React.string}
       </button>
     </div>
     <Link onClick={Link.article(~slug=data.slug)->Link.location} className="preview-link">
