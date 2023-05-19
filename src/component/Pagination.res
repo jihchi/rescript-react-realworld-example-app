@@ -7,8 +7,8 @@ let make = (~limit: int, ~offset: int, ~total: int, ~onClick: int => unit) =>
 
     <WithTestId id="page-link">
       <ul className="pagination">
-        {Belt.Array.range(0, pages)
-        ->Array.map(page => {
+        {Array.make(~length=pages, ())
+        ->Array.mapWithIndex((_unit, page) => {
           let className = if (offset == 0 && page == 0) || page == offset / limit {
             "page-item active"
           } else {
