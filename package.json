@@ -35,17 +35,14 @@
   },
   "prettier": {
     "singleQuote": true,
-    "trailingComma": "es5",
-    "plugins": [
-      "prettier-plugin-packagejson"
-    ]
+    "trailingComma": "es5"
   },
   "dependencies": {
     "@glennsl/rescript-fetch": "^0.2.0",
-    "@rescript/core": "^0.3.1",
+    "@rescript/core": "^0.5.0",
     "@rescript/react": "^0.11.0",
-    "dompurify": "^3.0.3",
-    "marked": "^5.0.4",
+    "dompurify": "^3.0.5",
+    "marked": "^7.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rescript": "11.0.0-alpha.6",
@@ -53,14 +50,13 @@
   },
   "devDependencies": {
     "@jihchi/vite-plugin-rescript": "^5.3.0",
-    "@vitejs/plugin-react": "^4.0.0",
-    "prettier": "^2.8.8",
-    "prettier-plugin-packagejson": "^2.4.3",
-    "vite": "^4.3.9"
+    "@vitejs/plugin-react": "^4.0.4",
+    "prettier": "^3.0.2",
+    "vite": "^4.4.9"
   },
-  "packageManager": "pnpm@8.5.1",
+  "packageManager": "pnpm@8.7.0",
   "engines": {
-    "node": "^16",
+    "node": "^18",
     "pnpm": "^8"
   }
 }
