@@ -1,4 +1,3 @@
-open Promise
 open Fetch
 
 module Action = {
@@ -31,46 +30,40 @@ let addJsonContentType = (): array<(string, string)> => {
   [("Content-Type", "application/json; charset=UTF-8")]
 }
 
-let parseBodyAsJson = (response: Response.t): Promise.t<parsedBody> => {
+let parseBodyAsJson = async (response: Response.t): parsedBody => {
   if Response.ok(response) {
-    response
-    ->Response.json
-    ->then(json => json->Ok->resolve)
-    ->catch(_error => response->Result.Error->resolve)
+    try {
+      let json = await Response.json(response)
+      Ok(json)
+    } catch {
+    | _ => Result.Error(response)
+    }
   } else {
-    response->Result.Error->resolve
+    Result.Error(response)
   }
 }
 
-let extractJsonError = (result: parsedBody): Promise.t<extractedError> => {
+let extractJsonError = async (result: parsedBody): extractedError => {
   switch result {
-  | Ok(json) => json->Result.Ok->resolve
+  | Ok(json) => Result.Ok(json)
   | Error(resp) =>
-    resp
-    ->Response.json
-    ->then(json => {
-      let status = Response.status(resp)
-      let statusText = Response.statusText(resp)
-      let bodyJson = #json(json)
-
-      AppError.fetch((status, statusText, bodyJson))->Result.Error->resolve
-    })
+    let json = await Response.json(resp)
+    let status = Response.status(resp)
+    let statusText = Response.statusText(resp)
+    let bodyJson = #json(json)
+    AppError.fetch((status, statusText, bodyJson))->Result.Error
   }
 }
 
-let extractTextError = (result: parsedBody): Promise.t<extractedError> => {
+let extractTextError = async (result: parsedBody): extractedError => {
   switch result {
-  | Ok(json) => json->Result.Ok->resolve
+  | Ok(json) => Result.Ok(json)
   | Error(resp) =>
-    resp
-    ->Response.text
-    ->then(text => {
-      let status = Response.status(resp)
-      let statusText = Response.statusText(resp)
-      let bodyText = #text(text)
-
-      AppError.fetch((status, statusText, bodyText))->Result.Error->resolve
-    })
+    let text = await Response.text(resp)
+    let status = Response.status(resp)
+    let statusText = Response.statusText(resp)
+    let bodyText = #text(text)
+    AppError.fetch((status, statusText, bodyText))->Result.Error
   }
 }
 

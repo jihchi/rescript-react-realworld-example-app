@@ -18,21 +18,19 @@ let useArticles = (~feedType: Shape.FeedType.t): (
   React.useEffect2(() => {
     setData(prev => prev->AsyncResult.toBusy)
 
-    switch feedType {
-    | Tag(tag, limit, offset) => API.listArticles(~limit, ~offset, ~tag=?Some(tag), ())
-    | Global(limit, offset) => API.listArticles(~limit, ~offset, ())
-    | Personal(limit, offset) => API.feedArticles(~limit, ~offset, ())
+    let _ = async () => {
+      let data = await switch feedType {
+      | Tag(tag, limit, offset) => API.listArticles(~limit, ~offset, ~tag=?Some(tag), ())
+      | Global(limit, offset) => API.listArticles(~limit, ~offset, ())
+      | Personal(limit, offset) => API.feedArticles(~limit, ~offset, ())
+      }
+      setData(_prev =>
+        switch data {
+        | Ok(ok) => AsyncResult.completeOk(ok)
+        | Error(error) => AsyncResult.completeError(error)
+        }
+      )
     }
-    ->Promise.then(data =>
-      setData(
-        _prev =>
-          switch data {
-          | Ok(ok) => AsyncResult.completeOk(ok)
-          | Error(error) => AsyncResult.completeError(error)
-          },
-      )->Promise.resolve
-    )
-    ->ignore
 
     None
   }, (feedType, setData))
@@ -48,20 +46,18 @@ let useArticlesInProfile: (
   React.useEffect2(() => {
     setData(prev => prev->AsyncResult.toBusy)
 
-    switch viewMode {
-    | Author(author, limit, offset) => API.listArticles(~author, ~limit, ~offset, ())
-    | Favorited(favorited, limit, offset) => API.listArticles(~favorited, ~limit, ~offset, ())
+    let _ = async () => {
+      let data = await switch viewMode {
+      | Author(author, limit, offset) => API.listArticles(~author, ~limit, ~offset, ())
+      | Favorited(favorited, limit, offset) => API.listArticles(~favorited, ~limit, ~offset, ())
+      }
+      setData(_prev =>
+        switch data {
+        | Ok(ok) => AsyncResult.completeOk(ok)
+        | Error(error) => AsyncResult.completeError(error)
+        }
+      )
     }
-    ->Promise.then(data =>
-      setData(
-        _prev =>
-          switch data {
-          | Ok(ok) => AsyncResult.completeOk(ok)
-          | Error(error) => AsyncResult.completeError(error)
-          },
-      )->Promise.resolve
-    )
-    ->ignore
 
     None
   }, (viewMode, setData))
@@ -75,17 +71,15 @@ let useTags: unit => asyncTags = () => {
   React.useEffect0(() => {
     setData(prev => prev->AsyncResult.getOk->Option.getOr([])->AsyncResult.reloadingOk)
 
-    API.tags()
-    ->Promise.then(data =>
-      setData(
-        _prev =>
-          switch data {
-          | Ok(ok) => ok->AsyncResult.completeOk
-          | Error(error) => AsyncResult.completeError(error)
-          },
-      )->Promise.resolve
-    )
-    ->ignore
+    let _ = async () => {
+      let data = await API.tags()
+      setData(_prev =>
+        switch data {
+        | Ok(ok) => ok->AsyncResult.completeOk
+        | Error(error) => AsyncResult.completeError(error)
+        }
+      )
+    }
 
     None
   })
@@ -99,18 +93,19 @@ let useCurrentUser: unit => (asyncData, (asyncData => asyncData) => unit) = () =
   React.useEffect0(() => {
     setData(prev => prev->AsyncData.toBusy)
 
-    API.currentUser()
-    ->Promise.then(data =>
-      setData(
-        _prev =>
+    let _ = async () => {
+      try {
+        let data = await API.currentUser()
+        setData(_prev =>
           switch data {
           | Ok(data') => Some(data')->AsyncData.complete
           | Error(_error) => None->AsyncData.complete
-          },
-      )->Promise.resolve
-    )
-    ->Promise.catch(_error => setData(_prev => None->AsyncData.complete)->Promise.resolve)
-    ->ignore
+          }
+        )
+      } catch {
+      | _ => setData(_prev => None->AsyncData.complete)
+      }
+    }
 
     None
   })
@@ -127,18 +122,16 @@ let useArticle = (~slug: string): (
   React.useEffect1(() => {
     setData(AsyncResult.toBusy)
 
-    API.article(~action=Read(slug), ())
-    ->Promise.then(data =>
-      setData(
-        _prev =>
-          switch data {
-          | Ok(ok: Shape.Article.t) =>
-            AsyncResult.completeOk((ok, ok.tagList->Array.join(","), None))
-          | Error(error) => AsyncResult.completeError(error)
-          },
-      )->Promise.resolve
-    )
-    ->ignore
+    let _ = async () => {
+      let data = await API.article(~action=Read(slug), ())
+      setData(_prev =>
+        switch data {
+        | Ok(ok: Shape.Article.t) =>
+          AsyncResult.completeOk((ok, ok.tagList->Array.join(","), None))
+        | Error(error) => AsyncResult.completeError(error)
+        }
+      )
+    }
 
     None
   }, [slug])
@@ -161,17 +154,15 @@ let useComments: (
     setData(prev => prev->AsyncResult.toBusy)
     setBusy(_prev => Belt.Set.Int.empty)
 
-    API.getComments(~slug, ())
-    ->Promise.then(data =>
-      setData(
-        _prev =>
-          switch data {
-          | Ok(ok) => AsyncResult.completeOk(ok)
-          | Error(error) => AsyncResult.completeError(error)
-          },
-      )->Promise.resolve
-    )
-    ->ignore
+    let _ = async () => {
+      let data = await API.getComments(~slug, ())
+      setData(_prev =>
+        switch data {
+        | Ok(ok) => AsyncResult.completeOk(ok)
+        | Error(error) => AsyncResult.completeError(error)
+        }
+      )
+    }
 
     None
   }, (slug, setData))
@@ -179,8 +170,8 @@ let useComments: (
   let deleteComment = (~slug, ~id) => {
     setBusy(prev => prev->Belt.Set.Int.add(id))
 
-    API.deleteComment(~slug, ~id, ())
-    ->Promise.then(resp => {
+    let _ = async () => {
+      let resp = await API.deleteComment(~slug, ~id, ())
       setBusy(prev => prev->Belt.Set.Int.remove(id))
 
       switch resp {
@@ -192,10 +183,7 @@ let useComments: (
         )
       | Error(_error) => ignore()
       }
-
-      ignore()->Promise.resolve
-    })
-    ->ignore
+    }
   }
 
   (data, busy, deleteComment, setData)
@@ -232,18 +220,20 @@ let useFollow: (
 
     setState(_prev => follow->AsyncData.toBusy)
 
-    API.followUser(~action, ())
-    ->Promise.then(data =>
-      setState(_prev =>
-        switch data {
-        | Ok(ok: Shape.Author.t) =>
-          AsyncData.complete((ok.username, ok.following->Option.getOr(false)))
-        | Error(_error) => AsyncData.complete(("", false))
-        }
-      )->Promise.resolve
-    )
-    ->Promise.catch(_error => setState(_prev => AsyncData.complete(("", false)))->Promise.resolve)
-    ->ignore
+    let _ = async () => {
+      try {
+        let data = await API.followUser(~action, ())
+        setState(_prev =>
+          switch data {
+          | Ok(ok: Shape.Author.t) =>
+            AsyncData.complete((ok.username, ok.following->Option.getOr(false)))
+          | Error(_error) => AsyncData.complete(("", false))
+          }
+        )
+      } catch {
+      | _ => setState(_prev => AsyncData.complete(("", false)))
+      }
+    }
   }
 
   let onClick = switch user {
@@ -285,18 +275,20 @@ let useFollowInProfile: (
 
     setState(_prev => follow->AsyncData.toBusy)
 
-    API.followUser(~action, ())
-    ->Promise.then(data =>
-      setState(_prev =>
-        switch data {
-        | Ok(ok: Shape.Author.t) =>
-          AsyncData.complete((ok.username, ok.following->Option.getOr(false)))
-        | Error(_error) => AsyncData.complete(("", false))
-        }
-      )->Promise.resolve
-    )
-    ->Promise.catch(_error => setState(_prev => AsyncData.complete(("", false)))->Promise.resolve)
-    ->ignore
+    let _ = async () => {
+      try {
+        let data = await API.followUser(~action, ())
+        setState(_prev =>
+          switch data {
+          | Ok(ok: Shape.Author.t) =>
+            AsyncData.complete((ok.username, ok.following->Option.getOr(false)))
+          | Error(_error) => AsyncData.complete(("", false))
+          }
+        )
+      } catch {
+      | _ => setState(_prev => AsyncData.complete(("", false)))
+      }
+    }
   }
 
   let onClick = switch user {
@@ -332,19 +324,19 @@ let useFavorite = (~article: asyncArticle, ~user: option<Shape.User.t>): (
 
     setState(_prev => favorite->AsyncData.toBusy)
 
-    API.favoriteArticle(~action, ())
-    ->Promise.then(data =>
-      setState(_prev =>
-        switch data {
-        | Ok(ok: Shape.Article.t) => AsyncData.complete((ok.favorited, ok.favoritesCount, ok.slug))
-        | Error(_error) => AsyncData.complete((false, 0, ""))
-        }
-      )->Promise.resolve
-    )
-    ->Promise.catch(_error =>
-      setState(_prev => AsyncData.complete((false, 0, "")))->Promise.resolve
-    )
-    ->ignore
+    let _ = async () => {
+      try {
+        let data = await API.favoriteArticle(~action, ())
+        setState(_prev =>
+          switch data {
+          | Ok(ok: Shape.Article.t) => AsyncData.complete((ok.favorited, ok.favoritesCount, ok.slug))
+          | Error(_error) => AsyncData.complete((false, 0, ""))
+          }
+        )
+      } catch {
+      | _ => setState(_prev => AsyncData.complete((false, 0, "")))
+      }
+    }
   }
 
   let onClick = switch user {
@@ -367,14 +359,15 @@ let useDeleteArticle: (
 
     setState(_prev => true)
 
-    API.article(~action=Delete(slug), ())
-    ->Promise.then(_data => {
-      setState(_prev => false)
-      Link.push(Link.home)
-      ignore()->Promise.resolve
-    })
-    ->Promise.catch(_error => setState(_prev => false)->Promise.resolve)
-    ->ignore
+    let _ = async () => {
+      try {
+        let _ = await API.article(~action=Delete(slug), ())
+        setState(_prev => false)
+        Link.push(Link.home)
+      } catch {
+      | _ => setState(_prev => false)
+      }
+    }
   }
 
   let onClick = switch (user, state) {
@@ -411,44 +404,44 @@ let useToggleFavorite: (
 
     setBusy(prev => prev->Belt.Set.String.add(slug))
 
-    API.favoriteArticle(~action, ())
-    ->Promise.then(data => {
-      setBusy(prev => prev->Belt.Set.String.remove(slug))
+    let _ = async () => {
+      try {
+        let data = await API.favoriteArticle(~action, ())
+        setBusy(prev => prev->Belt.Set.String.remove(slug))
 
-      switch data {
-      | Ok(_) =>
-        setArticles(prev =>
-          prev->AsyncResult.map(
-            (articles: Shape.Articles.t) => {
-              ...articles,
-              articles: articles.articles->Array.map(
-                (article: Shape.Article.t) =>
-                  if article.slug == slug {
-                    {
-                      ...article,
-                      favorited: switch action {
-                      | Favorite(_) => true
-                      | Unfavorite(_) => false
-                      },
-                      favoritesCount: switch action {
-                      | Favorite(_) => article.favoritesCount + 1
-                      | Unfavorite(_) => article.favoritesCount - 1
-                      },
-                    }
-                  } else {
-                    article
-                  },
-              ),
-            },
+        switch data {
+        | Ok(_) =>
+          setArticles(prev =>
+            prev->AsyncResult.map(
+              (articles: Shape.Articles.t) => {
+                ...articles,
+                articles: articles.articles->Array.map(
+                  (article: Shape.Article.t) =>
+                    if article.slug == slug {
+                      {
+                        ...article,
+                        favorited: switch action {
+                        | Favorite(_) => true
+                        | Unfavorite(_) => false
+                        },
+                        favoritesCount: switch action {
+                        | Favorite(_) => article.favoritesCount + 1
+                        | Unfavorite(_) => article.favoritesCount - 1
+                        },
+                      }
+                    } else {
+                      article
+                    },
+                ),
+              },
+            )
           )
-        )
-      | Error(_error) => ignore()
+        | Error(_error) => ignore()
+        }
+      } catch {
+      | _ => setBusy(prev => prev->Belt.Set.String.remove(slug))
       }
-
-      ignore()->Promise.resolve
-    })
-    ->Promise.catch(_error => setBusy(prev => prev->Belt.Set.String.remove(slug))->Promise.resolve)
-    ->ignore
+    }
   }
 
   let onToggle = (~action) =>
@@ -466,17 +459,15 @@ let useProfile: (~username: string) => asyncAuthor = (~username) => {
   React.useEffect2(() => {
     setData(prev => prev->AsyncResult.toBusy)
 
-    API.getProfile(~username, ())
-    ->Promise.then(data =>
-      setData(
-        _prev =>
-          switch data {
-          | Ok(ok) => AsyncResult.completeOk(ok)
-          | Error(error) => AsyncResult.completeError(error)
-          },
-      )->Promise.resolve
-    )
-    ->ignore
+    let _ = async () => {
+      let data = await API.getProfile(~username, ())
+      setData(_prev =>
+        switch data {
+        | Ok(ok) => AsyncResult.completeOk(ok)
+        | Error(error) => AsyncResult.completeError(error)
+        }
+      )
+    }
 
     None
   }, (username, setData))
