@@ -17,14 +17,14 @@ module Action = {
     | Unfavorite(string)
 }
 
-type parsedBody = result<Js.Json.t, Response.t>
-type extractedError = result<Js.Json.t, AppError.t>
+type parsedBody = result<JSON.t, Response.t>
+type extractedError = result<JSON.t, AppError.t>
 
 let addJwtAuthorization = (): array<(string, string)> => {
   Utils.getCookie(Constant.Auth.tokenCookieName)
-  ->Option.flatMap(snd)
+  ->Option.flatMap(Pair.second)
   ->Option.map(token => [("Authorization", `Token ${token}`)])
-  ->Option.getWithDefault([])
+  ->Option.getOr([])
 }
 
 let addJsonContentType = (): array<(string, string)> => {
@@ -102,16 +102,16 @@ let article = async (~action: Action.article, ()): result<Shape.Article.t, AppEr
   let body = switch action {
   | Create(article) | Update(_, article) =>
     let article =
-      list{
-        ("title", Js.Json.string(article.title)),
-        ("description", Js.Json.string(article.description)),
-        ("body", Js.Json.string(article.body)),
-        ("tagList", Js.Json.stringArray(article.tagList)),
-      }
-      ->Js.Dict.fromList
-      ->Js.Json.object_
+      [
+        ("title", JSON.Encode.string(article.title)),
+        ("description", JSON.Encode.string(article.description)),
+        ("body", JSON.Encode.string(article.body)),
+        ("tagList", JSON.Encode.stringArray(article.tagList)),
+      ]
+      ->Dict.fromArray
+      ->JSON.Encode.object
 
-    list{("article", article)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
+    [("article", article)]->Dict.fromArray->JSON.Encode.object->JSON.stringify->Body.string
   | Read(_) | Delete(_) => Body.none
   }
 
@@ -129,10 +129,10 @@ let article = async (~action: Action.article, ()): result<Shape.Article.t, AppEr
   res->Result.flatMap(json => {
     try {
       json
-      ->Js.Json.decodeObject
-      ->Option.getExn
-      ->Js.Dict.get("article")
-      ->Option.getExn
+      ->JSON.Decode.object
+      ->Option.getOrThrow
+      ->Dict.get("article")
+      ->Option.getOrThrow
       ->Shape.Article.decode
       ->AppError.decode
     } catch {
@@ -170,10 +170,10 @@ let favoriteArticle = async (~action: Action.favorite, ()): result<Shape.Article
   res->Result.flatMap(json =>
     try {
       json
-      ->Js.Json.decodeObject
-      ->Option.getExn
-      ->Js.Dict.get("article")
-      ->Option.getExn
+      ->JSON.Decode.object
+      ->Option.getOrThrow
+      ->Dict.get("article")
+      ->Option.getOrThrow
       ->Shape.Article.decode
       ->AppError.decode
     } catch {
@@ -267,26 +267,27 @@ let updateUser = async (~user: Shape.User.t, ~password: string, ()): result<
 
   let user =
     list{
-      list{("email", Js.Json.string(user.email))},
-      list{("bio", Js.Json.string(user.bio->Option.getWithDefault("")))},
-      list{("image", Js.Json.string(user.image->Option.getWithDefault("")))},
-      list{("username", Js.Json.string(user.username))},
+      list{("email", JSON.Encode.string(user.email))},
+      list{("bio", JSON.Encode.string(user.bio->Option.getOr("")))},
+      list{("image", JSON.Encode.string(user.image->Option.getOr("")))},
+      list{("username", JSON.Encode.string(user.username))},
       if password == "" {
         list{}
       } else {
-        list{("password", Js.Json.string(password))}
+        list{("password", JSON.Encode.string(password))}
       },
     }
-    ->List.flatten
-    ->Js.Dict.fromList
-    ->Js.Json.object_
+    ->List.flat
+    ->List.toArray
+    ->Dict.fromArray
+    ->JSON.Encode.object
 
   let method = #PUT
 
   let headers =
     addJwtAuthorization()->Array.concat(addJsonContentType())->Headers.Init.array->Headers.make
 
-  let body = list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
+  let body = [("user", user)]->Dict.fromArray->JSON.Encode.object->JSON.stringify->Body.string
 
   let res = await fetch(
     url,
@@ -331,10 +332,10 @@ let followUser = async (~action: Action.follow, ()): result<Shape.Author.t, AppE
   res->Result.flatMap(json => {
     try {
       json
-      ->Js.Json.decodeObject
-      ->Option.getExn
-      ->Js.Dict.get("profile")
-      ->Option.getExn
+      ->JSON.Decode.object
+      ->Option.getOrThrow
+      ->Dict.get("profile")
+      ->Option.getOrThrow
       ->Shape.Author.decode
       ->AppError.decode
     } catch {
@@ -387,10 +388,10 @@ let addComment = async (~slug: string, ~body: string, ()): result<Shape.Comment.
   let headers =
     addJwtAuthorization()->Array.concat(addJsonContentType())->Headers.Init.array->Headers.make
 
-  let comment = list{("body", Js.Json.string(body))}->Js.Dict.fromList->Js.Json.object_
+  let comment = [("body", JSON.Encode.string(body))]->Dict.fromArray->JSON.Encode.object
 
   let body =
-    list{("comment", comment)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
+    [("comment", comment)]->Dict.fromArray->JSON.Encode.object->JSON.stringify->Body.string
 
   let res = await fetch(
     url,
@@ -407,10 +408,10 @@ let addComment = async (~slug: string, ~body: string, ()): result<Shape.Comment.
   res->Result.flatMap(json => {
     try {
       json
-      ->Js.Json.decodeObject
-      ->Option.getExn
-      ->Js.Dict.get("comment")
-      ->Option.getExn
+      ->JSON.Decode.object
+      ->Option.getOrThrow
+      ->Dict.get("comment")
+      ->Option.getOrThrow
       ->Shape.Comment.decodeComment
       ->AppError.decode
     } catch {
@@ -437,10 +438,10 @@ let getProfile = async (~username: string, ()): result<Shape.Author.t, AppError.
   res->Result.flatMap(json => {
     try {
       json
-      ->Js.Json.decodeObject
-      ->Option.getExn
-      ->Js.Dict.get("profile")
-      ->Option.getExn
+      ->JSON.Decode.object
+      ->Option.getOrThrow
+      ->Dict.get("profile")
+      ->Option.getOrThrow
       ->Shape.Author.decode
       ->AppError.decode
     } catch {
@@ -457,11 +458,11 @@ let login = async (~email: string, ~password: string, ()): result<Shape.User.t, 
   let headers = addJsonContentType()->Headers.Init.array->Headers.make
 
   let user =
-    list{("email", Js.Json.string(email)), ("password", Js.Json.string(password))}
-    ->Js.Dict.fromList
-    ->Js.Json.object_
+    [("email", JSON.Encode.string(email)), ("password", JSON.Encode.string(password))]
+    ->Dict.fromArray
+    ->JSON.Encode.object
 
-  let body = list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
+  let body = [("user", user)]->Dict.fromArray->JSON.Encode.object->JSON.stringify->Body.string
 
   let res = await fetch(
     url,
@@ -488,15 +489,15 @@ let register = async (~username: string, ~email: string, ~password: string, ()):
   let headers = addJsonContentType()->Headers.Init.array->Headers.make
 
   let user =
-    list{
-      ("email", Js.Json.string(email)),
-      ("password", Js.Json.string(password)),
-      ("username", Js.Json.string(username)),
-    }
-    ->Js.Dict.fromList
-    ->Js.Json.object_
+    [
+      ("email", JSON.Encode.string(email)),
+      ("password", JSON.Encode.string(password)),
+      ("username", JSON.Encode.string(username)),
+    ]
+    ->Dict.fromArray
+    ->JSON.Encode.object
 
-  let body = list{("user", user)}->Js.Dict.fromList->Js.Json.object_->Js.Json.stringify->Body.string
+  let body = [("user", user)]->Dict.fromArray->JSON.Encode.object->JSON.stringify->Body.string
 
   let res = await fetch(
     url,

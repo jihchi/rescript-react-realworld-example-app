@@ -11,4 +11,4 @@ let make = (~article) =>
       }}
     </Link>
   )
-  ->Option.getWithDefault(React.null)
+  ->Option.getOr(React.null)

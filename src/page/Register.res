@@ -10,7 +10,7 @@ let empty = ({username: "", email: "", password: ""}, None)
 let make = (~setUser) => {
   let (data, setData) = React.useState(() => AsyncData.complete(empty))
   let isBusy = data->AsyncData.isBusy
-  let (form, error) = data->AsyncData.getValue->Option.getWithDefault(empty)
+  let (form, error) = data->AsyncData.getValue->Option.getOr(empty)
 
   let handleSignupClick = async () => {
     if isBusy {
@@ -32,10 +32,10 @@ let make = (~setUser) => {
         try {
           let result =
             json
-            ->Js.Json.decodeObject
-            ->Option.getExn
-            ->Js.Dict.get("errors")
-            ->Option.getExn
+            ->JSON.Decode.object
+            ->Option.getOrThrow
+            ->Dict.get("errors")
+            ->Option.getOrThrow
             ->Shape.Register.decode
           switch result {
           | Ok(errors) =>
@@ -45,7 +45,7 @@ let make = (~setUser) => {
           | Error(_e) => ignore()
           }
         } catch {
-        | _ => Js.log("Button.UpdateSettings: failed to decode json")
+        | _ => Console.log("Button.UpdateSettings: failed to decode json")
         }
       | Error(Fetch((_, _, #text(_)))) | Error(Decode(_)) => setData(AsyncData.toIdle)
       }
@@ -120,7 +120,8 @@ let make = (~setUser) => {
                 event->ReactEvent.Mouse.preventDefault
                 event->ReactEvent.Mouse.stopPropagation
                 handleSignupClick()->ignore
-              }}>
+              }}
+            >
               {"Sign up"->React.string}
             </button>
           </form>

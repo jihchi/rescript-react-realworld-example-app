@@ -1,6 +1,6 @@
 @react.component
 let make = (~user: option<Shape.User.t>) => {
-  let currentUser = user->Option.getWithDefault(Shape.User.empty)
+  let currentUser = user->Option.getOr(Shape.User.empty)
 
   <nav className="navbar navbar-light">
     <div className="container">
@@ -41,7 +41,8 @@ let make = (~user: option<Shape.User.t>) => {
           <li className="nav-item">
             <Link
               className="nav-link"
-              onClick={Link.profile(~username=currentUser.username)->Link.location}>
+              onClick={Link.profile(~username=currentUser.username)->Link.location}
+            >
               {currentUser.username->React.string}
             </Link>
           </li>

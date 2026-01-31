@@ -11,10 +11,10 @@ module Articles = {
   ) => string = (~limit=10, ~offset=0, ~tag=?, ~author=?, ~favorited=?, ()) => {
     let limit = limit->Int.toString
     let offset = offset->Int.toString
-    let tag = tag->Option.map(tag' => "&tag=" ++ tag')->Option.getWithDefault("")
-    let author = author->Option.map(author' => "&author=" ++ author')->Option.getWithDefault("")
+    let tag = tag->Option.map(tag' => "&tag=" ++ tag')->Option.getOr("")
+    let author = author->Option.map(author' => "&author=" ++ author')->Option.getOr("")
     let favorited =
-      favorited->Option.map(favorited' => "&favorited=" ++ favorited')->Option.getWithDefault("")
+      favorited->Option.map(favorited' => "&favorited=" ++ favorited')->Option.getOr("")
 
     `${backend}/api/articles?limit=${limit}&offset=${offset}${tag}${author}${favorited}`
   }

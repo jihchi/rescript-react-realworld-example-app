@@ -4,4 +4,4 @@ let make = (~article) =>
   ->AsyncResult.getOk
   ->Option.map((ok: Shape.Article.t) => ok.createdAt)
   ->Option.map(createdAt => createdAt->Utils.formatDate->React.string)
-  ->Option.getWithDefault(React.null)
+  ->Option.getOr(React.null)

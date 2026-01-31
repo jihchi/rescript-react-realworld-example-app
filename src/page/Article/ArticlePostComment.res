@@ -10,9 +10,9 @@ let make = (
   ) => unit,
 ) => {
   let (comment, setComment) = React.useState(() => AsyncData.complete(""))
-  let body = comment->AsyncData.getValue->Option.getWithDefault("")
+  let body = comment->AsyncData.getValue->Option.getOr("")
   let isCommentValid =
-    comment->AsyncData.getValue->Option.map(v => String.trim(v) != "")->Option.getWithDefault(false)
+    comment->AsyncData.getValue->Option.map(v => String.trim(v) != "")->Option.getOr(false)
 
   let handlePostCommentClick = async () => {
     if isCommentValid && AsyncData.isComplete(comment) {
@@ -57,7 +57,8 @@ let make = (
           event->ReactEvent.Mouse.preventDefault
           event->ReactEvent.Mouse.stopPropagation
           handlePostCommentClick()->ignore
-        }}>
+        }}
+      >
         {"Post Comment"->React.string}
       </button>
     </div>

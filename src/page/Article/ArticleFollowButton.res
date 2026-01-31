@@ -11,10 +11,11 @@ let make = (~data: AsyncData.t<(string, bool)>, ~onClick: Link.onClickAction) =>
     onClick={switch data {
     | Init | Loading | Reloading((_, _)) => Link.customFn(ignore)
     | Complete((_, _)) => onClick
-    }}>
+    }}
+  >
     <i
       className={AsyncData.isBusy(data) ? "ion-load-a" : "ion-plus-round"}
-      style={ReactDOM.Style.make(~marginRight="5px", ())}
+      style={marginRight: "5px"}
     />
     {switch data {
     | Init | Loading => React.null

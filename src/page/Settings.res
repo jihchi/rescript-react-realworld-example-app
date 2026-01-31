@@ -5,7 +5,7 @@ let make = (
 ) => {
   let (result, setResult) = React.useState(() => AsyncData.complete((user, "", None)))
   let isBusy = result->AsyncData.isBusy
-  let (form, password, error) = result->AsyncData.getValue->Option.getWithDefault((user, "", None))
+  let (form, password, error) = result->AsyncData.getValue->Option.getOr((user, "", None))
 
   let updateUser = async (~user, ~password) => {
     setResult(AsyncData.toBusy)
@@ -20,10 +20,10 @@ let make = (
       try {
         let result =
           json
-          ->Js.Json.decodeObject
-          ->Option.getExn
-          ->Js.Dict.get("errors")
-          ->Option.getExn
+          ->JSON.Decode.object
+          ->Option.getOrThrow
+          ->Dict.get("errors")
+          ->Option.getOrThrow
           ->Shape.Settings.decode
         switch result {
         | Ok(errors) =>
@@ -36,7 +36,7 @@ let make = (
         }
       } catch {
       | _ =>
-        Js.log("Button.UpdateSettings: failed to decode json")
+        Console.log("Button.UpdateSettings: failed to decode json")
         ignore()
       }
     | Error(Fetch((_, _, #text(_)))) | Error(Decode(_)) => ignore()
@@ -67,7 +67,7 @@ let make = (
                   type_="text"
                   placeholder="URL of profile picture"
                   disabled=isBusy
-                  value={form.image->Option.getWithDefault("")}
+                  value={form.image->Option.getOr("")}
                   onChange={event => {
                     let image = ReactEvent.Form.target(event)["value"]
                     setResult(prev =>
@@ -105,7 +105,7 @@ let make = (
                   rows=8
                   placeholder="Short bio about you"
                   disabled=isBusy
-                  value={form.bio->Option.getWithDefault("")}
+                  value={form.bio->Option.getOr("")}
                   onChange={event => {
                     let bio = ReactEvent.Form.target(event)["value"]
                     setResult(prev =>
@@ -163,7 +163,8 @@ let make = (
                     updateUser(~user, ~password)->ignore
                   })
                   ->ignore
-                }}>
+                }}
+              >
                 {"Update Settings"->React.string}
               </button>
             </fieldset>
@@ -182,7 +183,8 @@ let make = (
                 Utils.deleteCookie(Constant.Auth.tokenCookieName)
                 Link.home->Link.push
               }
-            }}>
+            }}
+          >
             {"Or click here to logout."->React.string}
           </button>
         </div>

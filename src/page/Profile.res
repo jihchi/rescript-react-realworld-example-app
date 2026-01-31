@@ -20,7 +20,7 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
             ->AsyncResult.getOk
             ->Option.flatMap((user: Shape.Author.t) => user.image == "" ? None : Some(user.image))
             ->Option.map(src => <img src className="user-img" />)
-            ->Option.getWithDefault(<img className="user-img" />)}
+            ->Option.getOr(<img className="user-img" />)}
             <h4>
               {switch profile {
               | Init | Loading | Reloading(Error(_)) | Complete(Error(_)) => "..."
@@ -30,7 +30,7 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
             {switch profile {
             | Init | Loading | Reloading(Error(_)) | Complete(Error(_)) => React.null
             | Reloading(Ok(user)) | Complete(Ok(user)) =>
-              user.bio->Option.map(bio => bio->React.string)->Option.getWithDefault(React.null)
+              user.bio->Option.map(bio => bio->React.string)->Option.getOr(React.null)
             }}
             {switch profile {
             | Init | Loading | Reloading(Error(_)) | Complete(Error(_)) => React.null
@@ -59,31 +59,32 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
                       None
                     }
                   )
-                  ->Option.getWithDefault(onFollowClick)
-                }}>
+                  ->Option.getOr(onFollowClick)
+                }}
+              >
                 {switch (follow, user) {
                 | (Init, Some(_) | None) =>
                   <i
-                    className="ion-plus-round" style={ReactDOM.Style.make(~marginRight="3px", ())}
+                    className="ion-plus-round" style={marginRight: "3px"}
                   />
                 | (Loading, Some(_) | None) | (Reloading((_, _)), _) =>
-                  <i className="ion-load-a" style={ReactDOM.Style.make(~marginRight="3px", ())} />
+                  <i className="ion-load-a" style={marginRight: "3px"} />
                 | (Complete((username, _following)), user) =>
                   user
                   ->Option.flatMap((ok: Shape.User.t) =>
                     if ok.username == username {
                       Some(
                         <i
-                          className="ion-gear-a" style={ReactDOM.Style.make(~marginRight="3px", ())}
+                          className="ion-gear-a" style={marginRight: "3px"}
                         />,
                       )
                     } else {
                       None
                     }
                   )
-                  ->Option.getWithDefault(
+                  ->Option.getOr(
                     <i
-                      className="ion-plus-round" style={ReactDOM.Style.make(~marginRight="3px", ())}
+                      className="ion-plus-round" style={marginRight: "3px"}
                     />,
                   )
                 }}
@@ -99,7 +100,7 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
                       None
                     }
                   )
-                  ->Option.getWithDefault(` ${following ? "Unfollow" : "Follow"} ${username}`)
+                  ->Option.getOr(` ${following ? "Unfollow" : "Follow"} ${username}`)
                   ->React.string
                 }}
               </Link.Button>
@@ -126,7 +127,8 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
                     | Favorited(_) => true
                     },
                     Link.Location(Link.profile(~username)),
-                  )}>
+                  )}
+                >
                   {"My Articles"->React.string}
                 </Link>
               </li>
@@ -143,7 +145,8 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
                     | Favorited(_) => false
                     },
                     Link.Location(Link.favorited(~username)),
-                  )}>
+                  )}
+                >
                   {"Favorited Articles"->React.string}
                 </Link>
               </li>
@@ -163,7 +166,7 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
             <>
               {ok.articles
               ->Array.map((article: Shape.Article.t) => {
-                let isFavoriteBusy = toggleFavoriteBusy->Belt.Set.String.has(_, article.slug)
+                let isFavoriteBusy = toggleFavoriteBusy->Belt.Set.String.has(article.slug)
 
                 <div className="article-preview" key=article.slug>
                   <div className="article-meta">
@@ -176,7 +179,8 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
                     <div className="info">
                       <Link
                         className="author"
-                        onClick={Link.profile(~username=article.author.username)->Link.location}>
+                        onClick={Link.profile(~username=article.author.username)->Link.location}
+                      >
                         {article.author.username->React.string}
                       </Link>
                       <span className="date">
@@ -194,17 +198,19 @@ let make = (~viewMode: Shape.Profile.viewMode, ~user: option<Shape.User.t>) => {
                             ? API.Action.Unfavorite(article.slug)
                             : API.Action.Favorite(article.slug),
                         )
-                      )}>
+                      )}
+                    >
                       <i
                         className={isFavoriteBusy ? "ion-load-a" : "ion-heart"}
-                        style={ReactDOM.Style.make(~marginRight="3px", ())}
+                        style={marginRight: "3px"}
                       />
-                      {article.favoritesCount->string_of_int->React.string}
+                      {article.favoritesCount->Int.toString->React.string}
                     </Link.Button>
                   </div>
                   <Link
                     className="preview-link"
-                    onClick={Link.article(~slug=article.slug)->Link.location}>
+                    onClick={Link.article(~slug=article.slug)->Link.location}
+                  >
                     <h1> {article.title->React.string} </h1>
                     <p> {article.description->React.string} </p>
                     <span> {"Read more..."->React.string} </span>
