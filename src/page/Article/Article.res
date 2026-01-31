@@ -20,7 +20,7 @@ let make = (~slug: string, ~user: option<Shape.User.t>) => {
           ->AsyncResult.getOk
           ->Option.map((ok: Shape.Article.t) => ok.title)
           ->Option.map(title => title->React.string)
-          ->Option.getWithDefault(React.null)}
+          ->Option.getOr(React.null)}
         </h1>
         <div className="article-meta">
           <ArticleAuthorAvatar article />
@@ -42,7 +42,7 @@ let make = (~slug: string, ~user: option<Shape.User.t>) => {
     <div className="container page">
       <div className="row article-content">
         <div className="col-md-12">
-          <div style={ReactDOM.Style.make(~marginBottom="2rem", ())}>
+          <div style={marginBottom: "2rem"}>
             {switch article {
             | Init | Loading => <Spinner />
             | Reloading(Ok({body})) | Complete(Ok({body})) =>
@@ -81,8 +81,7 @@ let make = (~slug: string, ~user: option<Shape.User.t>) => {
       <div className="row">
         <div className="col-xs-12 col-md-8 offset-md-2">
           {switch user {
-          | Some({image}) =>
-            <ArticlePostComment image={image->Option.getWithDefault("")} slug setComments />
+          | Some({image}) => <ArticlePostComment image={image->Option.getOr("")} slug setComments />
           | None =>
             <p>
               <Link className="nav-link" onClick={Link.login->Link.location}>

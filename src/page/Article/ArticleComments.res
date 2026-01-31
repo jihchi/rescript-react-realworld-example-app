@@ -14,7 +14,7 @@ let make = (
     ->Array.map((comment: Shape.Comment.t) => {
       let isAPIBusy = Belt.Set.Int.has(busy, comment.id)
 
-      <div className="card" key={comment.id->string_of_int}>
+      <div className="card" key={comment.id->Int.toString}>
         <div className="card-block">
           <p className="card-text"> {comment.body->React.string} </p>
         </div>
@@ -22,7 +22,8 @@ let make = (
           <Link
             onClick={Link.profile(~username=comment.author.username)->Link.location}
             className="comment-author"
-            style={ReactDOM.Style.make(~marginRight="7px", ())}>
+            style={marginRight: "7px"}
+          >
             {switch comment.author.image {
             | "" => <img className="comment-author-img" />
             | src => <img src className="comment-author-img" />
@@ -30,7 +31,8 @@ let make = (
           </Link>
           <Link
             onClick={Link.profile(~username=comment.author.username)->Link.location}
-            className="comment-author">
+            className="comment-author"
+          >
             {comment.author.username->React.string}
           </Link>
           <span className="date-posted"> {comment.createdAt->Utils.formatDate->React.string} </span>

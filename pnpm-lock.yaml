@@ -11,12 +11,12 @@ importers:
       '@glennsl/rescript-fetch':
         specifier: ^0.2.0
         version: 0.2.3
-      '@rescript/core':
-        specifier: ^0.5.0
-        version: 0.5.0(rescript@11.0.0-alpha.6)
       '@rescript/react':
-        specifier: ^0.11.0
-        version: 0.11.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.13.1
+        version: 0.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@rescript/runtime':
+        specifier: ^12.1.0
+        version: 12.1.0
       dompurify:
         specifier: ^3.0.5
         version: 3.2.4
@@ -34,8 +34,8 @@ importers:
         version: 0.9.1
     devDependencies:
       '@jihchi/vite-plugin-rescript':
-        specifier: ^7.0.0
-        version: 7.0.0(rescript@11.0.0-alpha.6)(vite@6.2.2)
+        specifier: 8.0.0-beta.2
+        version: 8.0.0-beta.2(rescript@12.1.0)(vite@6.2.2)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
         version: 4.3.4(vite@6.2.2)
@@ -43,8 +43,8 @@ importers:
         specifier: ^3.0.3
         version: 3.5.3
       rescript:
-        specifier: 11.0.0-alpha.6
-        version: 11.0.0-alpha.6
+        specifier: 12.1.0
+        version: 12.1.0
       vite:
         specifier: ^6.2.2
         version: 6.2.2
@@ -287,11 +287,11 @@ packages:
   '@glennsl/rescript-fetch@0.2.3':
     resolution: {integrity: sha512-0MuaXeJHGii0/SKzR4ASB1Wal+ogdnNsD1K6HSTFUVc+TQzAZY+V8Nb7Z8K4OUqMJzmurIgVXNmirx3DC1Huyg==}
 
-  '@jihchi/vite-plugin-rescript@7.0.0':
-    resolution: {integrity: sha512-BwfFY1hAKE3OP6Ni1wGm9KYors9itbcgkiCe++Ll3XEM9UyrGzVeoIkLOFQJONXkdwRpbDW1HpQnGRbJDgTKJA==}
-    engines: {node: '>=18.0'}
+  '@jihchi/vite-plugin-rescript@8.0.0-beta.2':
+    resolution: {integrity: sha512-OXpG1+z7IXu/As+fYuwwCYlycoCt7VjPJyaxEFJWJD02cb/oEUTaz10+kFPN4njK6l0ecnzbcJxy1aUp+H6glA==}
+    engines: {node: '>=20'}
     peerDependencies:
-      rescript: '>=9'
+      rescript: '>=12.0.0-beta.11'
       vite: '>=5.1.0'
 
   '@jridgewell/gen-mapping@0.3.8':
@@ -312,16 +312,44 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@rescript/core@0.5.0':
-    resolution: {integrity: sha512-Keqnpi+8VqyhCk/3aMwar8hJbNy2IsINAAfIFeQC65IIegCR0QXFDBpQxfVcmbbtoHq6HnW4B3RLm/9GCUJQhQ==}
-    peerDependencies:
-      rescript: ^10.1.0 || ^11.0.0-alpha.0 || next
+  '@rescript/darwin-arm64@12.1.0':
+    resolution: {integrity: sha512-OuJMT+2h2Lp60n8ONFx1oBAAePSVkM9zl7E/EX4VD2xkQoVTPklz0BpHYOICnFJSCOOdbOhbsTBXdLpo3yvllg==}
+    engines: {node: '>=20.11.0'}
+    cpu: [arm64]
+    os: [darwin]
 
-  '@rescript/react@0.11.0':
-    resolution: {integrity: sha512-RzoAO+3cJwXE2D7yodMo4tBO2EkeDYCN/I/Sj/yRweI3S1CY1ZBOF/GMcVtjeIurJJt7KMveqQXTaRrqoGZBBg==}
+  '@rescript/darwin-x64@12.1.0':
+    resolution: {integrity: sha512-r5Iv4ga+LaNq+6g9LODwZG4bwydd9UDXACP/HKxOfrP9XQCITlF/XqB1ZDJWyJOgJLZSJCd7erlG38YtB0VZKA==}
+    engines: {node: '>=20.11.0'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@rescript/linux-arm64@12.1.0':
+    resolution: {integrity: sha512-UTZv4GTjbyQ/T5LQDfQiGcumK3SzE1K7+ug6gWpDcGZ7ALc7hCS6BVEFL/LDs8iWVwAwkK/6r456s2zRnvS7wQ==}
+    engines: {node: '>=20.11.0'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@rescript/linux-x64@12.1.0':
+    resolution: {integrity: sha512-c0PXuBL09JRSA4nQusYbR4mW5QJrBPqxDrqvIX+M79fk3d6jQmj5x4NsBwk5BavxvmbR/JU1JjYBlSAa3h22Vg==}
+    engines: {node: '>=20.11.0'}
+    cpu: [x64]
+    os: [linux]
+
+  '@rescript/react@0.13.1':
+    resolution: {integrity: sha512-VIWtu/sAJyYmDVoAhit0LHDYQrW6RqZ6z8sh8san5cjEAT4klv8JWkiaSK3FGUfooUDkGUXXgKTkqyj8zRR21w==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
+
+  '@rescript/runtime@12.1.0':
+    resolution: {integrity: sha512-bvr9RfvBD+JS/6foWCA4l2fLXmUXN0KGqylXQPHt09QxUghqgoCiaWVHaHSx5dOIk/jAPlGQ7zB5yVeMas/EFQ==}
+
+  '@rescript/win32-x64@12.1.0':
+    resolution: {integrity: sha512-nQC42QByyAbryfkbyK67iskipUqXVwTPCFrqissY4jJoP0128gg0yG6DydJnV1stXphtFdMFHtmyYE1ffG7UBg==}
+    engines: {node: '>=20.11.0'}
+    cpu: [x64]
+    os: [win32]
 
   '@rollup/rollup-android-arm-eabi@4.36.0':
     resolution: {integrity: sha512-jgrXjjcEwN6XpZXL0HUeOVGfjXhPyxAbbhD0BlXUB+abTOpbPiN5Wb3kOT7yb+uEtATNYF5x5gIfwutmuBA26w==}
@@ -457,8 +485,8 @@ packages:
   caniuse-lite@1.0.30001706:
     resolution: {integrity: sha512-3ZczoTApMAZwPKYWmwVbQMFpXBDds3/0VciVoUwPUbldlYyVLmRVuRs/PcUZtHpbLRpzzDvrvnFuREsGt6lUug==}
 
-  chalk@5.4.1:
-    resolution: {integrity: sha512-zgVZuo2WcZgfUEmsn6eO3kINexW8RAE4maiQ8QNs8CtpPCSyMiYsULR3HQYkm3w8FIA3SberyMJMSldGsW+U3w==}
+  chalk@5.6.2:
+    resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   convert-source-map@2.0.0:
@@ -492,8 +520,8 @@ packages:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
     engines: {node: '>=6'}
 
-  execa@9.5.2:
-    resolution: {integrity: sha512-EHlpxMCpHWSAh1dgS6bVeoLAXGnJNdR93aabr4QCGbzOM73o5XmRfM/e5FUqsw3aagP8S8XEWUWFAxnRBnAF0Q==}
+  execa@9.6.1:
+    resolution: {integrity: sha512-9Be3ZoN4LmYR90tUoVu2te2BsbzHfhJyfEiAVfz7N5/zv+jduIfLrV2xdQXOHbaD6KgpGdO9PRPM1Y4Q9QkPkA==}
     engines: {node: ^18.19.0 || >=20.5.0}
 
   figures@6.1.0:
@@ -517,8 +545,8 @@ packages:
     resolution: {integrity: sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==}
     engines: {node: '>=4'}
 
-  human-signals@8.0.0:
-    resolution: {integrity: sha512-/1/GPCpDUCCYwlERiYjxoczfP0zfvZMU/OWgQPMya9AbAE24vseigFdhAMObpc8Q4lc/kjutPfUddDYyAmejnA==}
+  human-signals@8.0.1:
+    resolution: {integrity: sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ==}
     engines: {node: '>=18.18.0'}
 
   is-plain-obj@4.1.0:
@@ -620,9 +648,9 @@ packages:
   rescript-webapi@0.9.1:
     resolution: {integrity: sha512-6havxEsyCgcCB4EsH8ac2QpLVbv5Nv6IMjTIn6XifpU/bjgXEvMTpNJ78/JEKtSH6kFUeFV/T/QHPRSZb66Rew==}
 
-  rescript@11.0.0-alpha.6:
-    resolution: {integrity: sha512-516p5A+ybndzdxjKbOVJNrSd+p+U3FZ5Lm9U7SfGREzJXKACY3e69dk9ey/wDO4fh6Ge8j+NIXhHOTjFhMx4sw==}
-    engines: {node: '>=10'}
+  rescript@12.1.0:
+    resolution: {integrity: sha512-n/B43wzIEKV4OmlrWbrlQOL4zZaz0RM/Cc8PG2YvhQvQDW7nscHJliDq1AGeVwHoMX68MeaKKzLDOMOMU9Z6FA==}
+    engines: {node: '>=20.11.0'}
     hasBin: true
 
   rollup@4.36.0:
@@ -913,12 +941,12 @@ snapshots:
 
   '@glennsl/rescript-fetch@0.2.3': {}
 
-  '@jihchi/vite-plugin-rescript@7.0.0(rescript@11.0.0-alpha.6)(vite@6.2.2)':
+  '@jihchi/vite-plugin-rescript@8.0.0-beta.2(rescript@12.1.0)(vite@6.2.2)':
     dependencies:
-      chalk: 5.4.1
-      execa: 9.5.2
+      chalk: 5.6.2
+      execa: 9.6.1
       npm-run-path: 6.0.0
-      rescript: 11.0.0-alpha.6
+      rescript: 12.1.0
       vite: 6.2.2
 
   '@jridgewell/gen-mapping@0.3.8':
@@ -938,14 +966,27 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@rescript/core@0.5.0(rescript@11.0.0-alpha.6)':
-    dependencies:
-      rescript: 11.0.0-alpha.6
+  '@rescript/darwin-arm64@12.1.0':
+    optional: true
 
-  '@rescript/react@0.11.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@rescript/darwin-x64@12.1.0':
+    optional: true
+
+  '@rescript/linux-arm64@12.1.0':
+    optional: true
+
+  '@rescript/linux-x64@12.1.0':
+    optional: true
+
+  '@rescript/react@0.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+
+  '@rescript/runtime@12.1.0': {}
+
+  '@rescript/win32-x64@12.1.0':
+    optional: true
 
   '@rollup/rollup-android-arm-eabi@4.36.0':
     optional: true
@@ -1054,7 +1095,7 @@ snapshots:
 
   caniuse-lite@1.0.30001706: {}
 
-  chalk@5.4.1: {}
+  chalk@5.6.2: {}
 
   convert-source-map@2.0.0: {}
 
@@ -1104,13 +1145,13 @@ snapshots:
 
   escalade@3.2.0: {}
 
-  execa@9.5.2:
+  execa@9.6.1:
     dependencies:
       '@sindresorhus/merge-streams': 4.0.0
       cross-spawn: 7.0.6
       figures: 6.1.0
       get-stream: 9.0.1
-      human-signals: 8.0.0
+      human-signals: 8.0.1
       is-plain-obj: 4.1.0
       is-stream: 4.0.1
       npm-run-path: 6.0.0
@@ -1135,7 +1176,7 @@ snapshots:
 
   globals@11.12.0: {}
 
-  human-signals@8.0.0: {}
+  human-signals@8.0.1: {}
 
   is-plain-obj@4.1.0: {}
 
@@ -1206,7 +1247,15 @@ snapshots:
 
   rescript-webapi@0.9.1: {}
 
-  rescript@11.0.0-alpha.6: {}
+  rescript@12.1.0:
+    dependencies:
+      '@rescript/runtime': 12.1.0
+    optionalDependencies:
+      '@rescript/darwin-arm64': 12.1.0
+      '@rescript/darwin-x64': 12.1.0
+      '@rescript/linux-arm64': 12.1.0
+      '@rescript/linux-x64': 12.1.0
+      '@rescript/win32-x64': 12.1.0
 
   rollup@4.36.0:
     dependencies:

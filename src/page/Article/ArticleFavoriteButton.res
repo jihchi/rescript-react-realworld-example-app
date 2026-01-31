@@ -8,14 +8,15 @@ let make = (~data: AsyncData.t<(bool, int, string)>, ~onClick: Link.onClickActio
     | Complete((false, _, _)) => "btn btn-sm btn-outline-primary"
     | Reloading((true, _, _)) | Complete((true, _, _)) => "btn btn-sm btn-primary"
     }}
-    style={ReactDOM.Style.make(~marginLeft="5px", ())}
+    style={marginLeft: "5px"}
     onClick={switch data {
     | Init | Loading | Reloading((_, _, _)) => Link.customFn(ignore)
     | Complete((_, _, _)) => onClick
-    }}>
+    }}
+  >
     <i
       className={AsyncData.isBusy(data) ? "ion-load-a" : "ion-heart"}
-      style={ReactDOM.Style.make(~marginRight="5px", ())}
+      style={marginRight: "5px"}
     />
     {switch data {
     | Init | Loading => React.null

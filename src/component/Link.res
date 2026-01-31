@@ -38,16 +38,18 @@ let handleClick = (onClick, event) => {
 }
 
 @react.component
-let make = (~className="", ~style=ReactDOM.Style.make(), ~onClick, ~children) => {
+let make = (~className="", ~style: ReactDOM.Style.t={}, ~onClick, ~children) => {
   let href = switch onClick {
   | Location(location) => Some(location->toString)
   | CustomFn(_fn) => None
   }
-  <a className ?href style onClick={handleClick(onClick)}> children </a>
+  <a className ?href style onClick={event => handleClick(onClick, event)}> children </a>
 }
 
 module Button = {
   @react.component
-  let make = (~className="", ~style=ReactDOM.Style.make(), ~onClick, ~disabled=false, ~children) =>
-    <button className style onClick={handleClick(onClick)} disabled> children </button>
+  let make = (~className="", ~style: ReactDOM.Style.t={}, ~onClick, ~disabled=false, ~children) =>
+    <button className style onClick={event => handleClick(onClick, event)} disabled>
+      children
+    </button>
 }

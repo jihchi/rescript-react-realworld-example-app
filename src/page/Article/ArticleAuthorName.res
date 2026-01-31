@@ -8,4 +8,4 @@ let make = (~article) =>
       {author.username->React.string}
     </Link>
   )
-  ->Option.getWithDefault(React.null)
+  ->Option.getOr(React.null)

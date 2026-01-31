@@ -17,7 +17,8 @@ let make = (~data: AsyncResult.t<Shape.Tags.t, AppError.t>, ~onClick) => <>
               if Utils.isMouseRightClick(event) {
                 event->ReactEvent.Mouse.preventDefault
                 tag->onClick->ignore
-              }}>
+              }}
+          >
             {tag->React.string}
           </a>
         )

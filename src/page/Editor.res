@@ -32,7 +32,7 @@ module Form = {
                 _tagList: string,
                 _error: option<Shape.Editor.t>,
               )) => article.title)
-              ->Option.getWithDefault("")}
+              ->Option.getOr("")}
               onChange={event => {
                 let title = ReactEvent.Form.target(event)["value"]
                 setData(prev =>
@@ -58,7 +58,7 @@ module Form = {
                 _tagList: string,
                 _error: option<Shape.Editor.t>,
               )) => article.description)
-              ->Option.getWithDefault("")}
+              ->Option.getOr("")}
               onChange={event => {
                 let description = ReactEvent.Form.target(event)["value"]
                 setData(prev =>
@@ -84,7 +84,7 @@ module Form = {
                 _tagList: string,
                 _error: option<Shape.Editor.t>,
               )) => article.body)
-              ->Option.getWithDefault("")}
+              ->Option.getOr("")}
               onChange={event => {
                 let body = ReactEvent.Form.target(event)["value"]
                 setData(prev =>
@@ -110,7 +110,7 @@ module Form = {
                 tagList: string,
                 _error: option<Shape.Editor.t>,
               )) => tagList)
-              ->Option.getWithDefault("")}
+              ->Option.getOr("")}
               onChange={event => {
                 let tagList = ReactEvent.Form.target(event)["value"]
                 setData(prev =>
@@ -146,7 +146,8 @@ module Form = {
                 | None => ignore()
                 }
               }
-            }}>
+            }}
+          >
             {"Publish Article"->React.string}
           </button>
         </fieldset>
@@ -163,8 +164,8 @@ module Create = {
       description: "",
       body: "",
       tagList: [],
-      createdAt: Js.Date.make(),
-      updatedAt: Js.Date.make(),
+      createdAt: Date.make(),
+      updatedAt: Date.make(),
       favorited: false,
       favoritesCount: 0,
       author: {
@@ -193,10 +194,10 @@ module Create = {
         try {
           let result =
             json
-            ->Js.Json.decodeObject
-            ->Option.getExn
-            ->Js.Dict.get("errors")
-            ->Option.getExn
+            ->JSON.Decode.object
+            ->Option.getOrThrow
+            ->Dict.get("errors")
+            ->Option.getOrThrow
             ->Shape.Editor.decode
           switch result {
           | Ok(errors) =>
@@ -208,7 +209,7 @@ module Create = {
           | Error(_e) => ignore()
           }
         } catch {
-        | _ => Js.log("Button.UpdateSettings: failed to decode json")
+        | _ => Console.log("Button.UpdateSettings: failed to decode json")
         }
       | Error(Fetch((_, _, #text(_)))) | Error(Decode(_)) => setArticle(AsyncResult.toIdle)
       }

@@ -41,7 +41,8 @@ let make = (~user: option<Shape.User.t>) => {
                         if Utils.isMouseRightClick(event) {
                           event->ReactEvent.Mouse.preventDefault
                           setFeedType(_ => Personal(10, 0))
-                        }}>
+                        }}
+                    >
                       {"Your Feed"->React.string}
                     </a>
                   </li>
@@ -57,7 +58,8 @@ let make = (~user: option<Shape.User.t>) => {
                       if Utils.isMouseRightClick(event) {
                         event->ReactEvent.Mouse.preventDefault
                         setFeedType(_ => Global(10, 0))
-                      }}>
+                      }}
+                  >
                     {"Global Feed"->React.string}
                   </a>
                 </li>
@@ -67,7 +69,8 @@ let make = (~user: option<Shape.User.t>) => {
                     <a
                       className="nav-link active"
                       href="#"
-                      onClick={event => event->ReactEvent.Mouse.preventDefault}>
+                      onClick={event => event->ReactEvent.Mouse.preventDefault}
+                    >
                       <i className="ion-pound" />
                       {/* FIXME: Get rid of "space" string below */
                       " "->React.string}
@@ -96,7 +99,7 @@ let make = (~user: option<Shape.User.t>) => {
                 key=item.slug
                 data=item
                 onToggleFavorite
-                isFavoriteBusy={toggleFavoriteBusy->Belt.Set.String.has(_, item.slug)}
+                isFavoriteBusy={toggleFavoriteBusy->Belt.Set.String.has(item.slug)}
               />
             )
             ->React.array

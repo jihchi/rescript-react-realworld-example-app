@@ -2,7 +2,7 @@
 let make = (~setUser) => {
   let (data, setData) = React.useState(() => AsyncData.complete(("", "", None)))
   let isBusy = data->AsyncData.isBusy
-  let (email, password, error) = data->AsyncData.getValue->Option.getWithDefault(("", "", None))
+  let (email, password, error) = data->AsyncData.getValue->Option.getOr(("", "", None))
 
   let handleLoginClick = async () => {
     setData(AsyncData.toBusy)
@@ -17,10 +17,10 @@ let make = (~setUser) => {
       try {
         let result =
           json
-          ->Js.Json.decodeObject
-          ->Option.getExn
-          ->Js.Dict.get("errors")
-          ->Option.getExn
+          ->JSON.Decode.object
+          ->Option.getOrThrow
+          ->Dict.get("errors")
+          ->Option.getOrThrow
           ->Shape.Login.decode
 
         switch result {
@@ -33,7 +33,7 @@ let make = (~setUser) => {
         | Error(_e) => ignore()
         }
       } catch {
-      | _ => Js.log("Button.SignIn: failed to decode json")
+      | _ => Console.log("Button.SignIn: failed to decode json")
       }
     | Error(Fetch((_, _, #text(_)))) | Error(Decode(_)) => setData(AsyncData.toIdle)
     }
@@ -96,7 +96,8 @@ let make = (~setUser) => {
                 event->ReactEvent.Mouse.preventDefault
                 event->ReactEvent.Mouse.stopPropagation
                 handleLoginClick()->ignore
-              }}>
+              }}
+            >
               {"Sign in"->React.string}
             </button>
           </form>

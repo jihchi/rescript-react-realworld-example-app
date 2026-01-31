@@ -4,14 +4,14 @@ let parseCookies = (): array<cookiePair> => {
   let cookie =
     Webapi.Dom.document
     ->Webapi.Dom.Document.asHtmlDocument
-    ->Option.getExn
+    ->Option.getOrThrow
     ->Webapi.Dom.HtmlDocument.cookie
 
   cookie
   ->String.split(";")
   ->Array.map(segment => {
     let pair = segment->String.split("=")
-    let key = pair->Array.get(0)->Option.getExn
+    let key = pair->Array.get(0)->Option.getOrThrow
     let value = pair->Array.get(1)
     (key, value)
   })
@@ -19,7 +19,7 @@ let parseCookies = (): array<cookiePair> => {
 
 let getCookie = (name: string): option<cookiePair> =>
   parseCookies()->Array.find(pair => {
-    let key = fst(pair)
+    let key = Pair.first(pair)
     key == name
   })
 
@@ -30,15 +30,15 @@ let setCookieRaw = (
   ~path: option<string>=?,
   (),
 ): unit => {
-  let htmlDocument = Webapi.Dom.document->Webapi.Dom.Document.asHtmlDocument->Option.getExn
+  let htmlDocument = Webapi.Dom.document->Webapi.Dom.Document.asHtmlDocument->Option.getOrThrow
 
-  let value = value->Option.getWithDefault("")
+  let value = value->Option.getOr("")
   let expires = expires !== "" ? `expires=${expires};` : ""
   let path =
     path
     ->Option.flatMap(path => path == "" ? None : Some(path))
     ->Option.map(path => ` path=${path};`)
-    ->Option.getWithDefault("")
+    ->Option.getOr("")
   let cookie = `${key}=${value};${expires}${path}`
 
   Webapi.Dom.HtmlDocument.setCookie(htmlDocument, cookie)
@@ -47,10 +47,9 @@ let setCookieRaw = (
 let setCookie = (key: string, value: option<string>): unit => {
   open Constant
 
-  let expires = Js.Date.make()
-  let _ = Js.Date.setTime(expires, Js.Date.getTime(expires) +. Duration.monthInMs)
+  let expires = Date.fromTime(Date.now() +. Duration.monthInMs)
 
-  setCookieRaw(~key, ~value?, ~expires=expires->Js.Date.toUTCString, ~path="/", ())
+  setCookieRaw(~key, ~value?, ~expires=expires->Date.toUTCString, ~path="/", ())
 }
 
 let deleteCookie = (key: string): unit =>
@@ -67,17 +66,17 @@ let isMouseRightClick = event => {
   !Mouse.shiftKey(event)
 }
 
-let formatDate = (date: Js.Date.t): string => {
-  let yyyy = date->Js.Date.getFullYear->Int.fromFloat->Int.toString
-  let mm = date->Js.Date.getMonth->Int.fromFloat->Int.toString
-  let dd = date->Js.Date.getDate->Int.fromFloat->Int.toString
+let formatDate = (date: Date.t): string => {
+  let yyyy = date->Date.getFullYear->Int.toString
+  let mm = date->Date.getMonth->Int.toString
+  let dd = date->Date.getDate->Int.toString
 
   `${yyyy}/${mm}/${dd}`
 }
 
 module Json = {
-  let decodeArrayString = (json: option<Js.Json.t>): option<array<string>> =>
+  let decodeArrayString = (json: option<JSON.t>): option<array<string>> =>
     json
-    ->Option.flatMap(Js.Json.decodeArray)
-    ->Option.map(xs => xs->Array.filterMap(Js.Json.decodeString))
+    ->Option.flatMap(JSON.Decode.array)
+    ->Option.map(xs => xs->Array.filterMap(JSON.Decode.string))
 }

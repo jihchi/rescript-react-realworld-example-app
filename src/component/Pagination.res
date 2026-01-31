@@ -15,7 +15,7 @@ let make = (~limit: int, ~offset: int, ~total: int, ~onClick: int => unit) =>
             "page-item"
           }
 
-          <li key={page->string_of_int} className>
+          <li key={page->Int.toString} className>
             <a
               className="page-link"
               href={`#${page->Int.toString}`}
@@ -23,8 +23,9 @@ let make = (~limit: int, ~offset: int, ~total: int, ~onClick: int => unit) =>
                 if Utils.isMouseRightClick(event) {
                   event->ReactEvent.Mouse.preventDefault
                   onClick(page * limit)
-                }}>
-              {string_of_int(page + 1)->React.string}
+                }}
+            >
+              {Int.toString(page + 1)->React.string}
             </a>
           </li>
         })

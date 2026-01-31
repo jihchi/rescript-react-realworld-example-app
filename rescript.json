@@ -3,29 +3,23 @@
   "namespace": true,
   "suffix": ".bs.js",
   "jsx": {
-    "version": 4,
-    "mode": "automatic"
+    "version": 4
   },
-  "bsc-flags": [
-    "-bs-super-errors",
-    "-bs-no-version-header",
-    "-open RescriptCore"
-  ],
+  "compiler-flags": ["-bs-no-version-header"],
   "sources": {
     "dir": "src",
     "subdirs": true
   },
   "package-specs": [
     {
-      "module": "es6",
+      "module": "esmodule",
       "in-source": true
     }
   ],
-  "bs-dependencies": [
+  "dependencies": [
     "@glennsl/rescript-fetch",
-    "@rescript/core",
     "@rescript/react",
     "rescript-webapi"
   ],
-  "bs-dev-dependencies": []
+  "dev-dependencies": []
 }

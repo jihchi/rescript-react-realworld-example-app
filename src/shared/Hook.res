@@ -73,7 +73,7 @@ let useTags: unit => asyncTags = () => {
   let (data, setData) = React.useState(() => AsyncResult.init)
 
   React.useEffect0(() => {
-    setData(prev => prev->AsyncResult.getOk->Option.getWithDefault([])->AsyncResult.reloadingOk)
+    setData(prev => prev->AsyncResult.getOk->Option.getOr([])->AsyncResult.reloadingOk)
 
     API.tags()
     ->Promise.then(data =>
@@ -133,7 +133,7 @@ let useArticle = (~slug: string): (
         _prev =>
           switch data {
           | Ok(ok: Shape.Article.t) =>
-            AsyncResult.completeOk((ok, ok.tagList->Array.joinWith(","), None))
+            AsyncResult.completeOk((ok, ok.tagList->Array.join(","), None))
           | Error(error) => AsyncResult.completeError(error)
           },
       )->Promise.resolve
@@ -177,11 +177,11 @@ let useComments: (
   }, (slug, setData))
 
   let deleteComment = (~slug, ~id) => {
-    setBusy(prev => prev->Belt.Set.Int.add(_, id))
+    setBusy(prev => prev->Belt.Set.Int.add(id))
 
     API.deleteComment(~slug, ~id, ())
     ->Promise.then(resp => {
-      setBusy(prev => prev->Belt.Set.Int.remove(_, id))
+      setBusy(prev => prev->Belt.Set.Int.remove(id))
 
       switch resp {
       | Ok((_slug, id)) =>
@@ -212,18 +212,15 @@ let useFollow: (
     article
     ->AsyncResult.getOk
     ->Option.map((ok: Shape.Article.t) =>
-      AsyncData.complete((ok.author.username, ok.author.following->Option.getWithDefault(false)))
+      AsyncData.complete((ok.author.username, ok.author.following->Option.getOr(false)))
     )
-    ->Option.getWithDefault(AsyncData.complete(("", false)))
+    ->Option.getOr(AsyncData.complete(("", false)))
   | Loading as orig | Reloading(_) as orig | Complete(_) as orig => orig
   }
 
   let sendRequest = () => {
     let username =
-      follow
-      ->AsyncData.getValue
-      ->Option.map(((username, _following)) => username)
-      ->Option.getWithDefault("")
+      follow->AsyncData.getValue->Option.map(((username, _following)) => username)->Option.getOr("")
 
     let action =
       follow
@@ -231,7 +228,7 @@ let useFollow: (
       ->Option.flatMap(((_username, following)) =>
         following ? Some(API.Action.Unfollow(username)) : None
       )
-      ->Option.getWithDefault(API.Action.Follow(username))
+      ->Option.getOr(API.Action.Follow(username))
 
     setState(_prev => follow->AsyncData.toBusy)
 
@@ -240,7 +237,7 @@ let useFollow: (
       setState(_prev =>
         switch data {
         | Ok(ok: Shape.Author.t) =>
-          AsyncData.complete((ok.username, ok.following->Option.getWithDefault(false)))
+          AsyncData.complete((ok.username, ok.following->Option.getOr(false)))
         | Error(_error) => AsyncData.complete(("", false))
         }
       )->Promise.resolve
@@ -268,18 +265,15 @@ let useFollowInProfile: (
     profile
     ->AsyncResult.getOk
     ->Option.map((ok: Shape.Author.t) =>
-      AsyncData.complete((ok.username, ok.following->Option.getWithDefault(false)))
+      AsyncData.complete((ok.username, ok.following->Option.getOr(false)))
     )
-    ->Option.getWithDefault(AsyncData.complete(("", false)))
+    ->Option.getOr(AsyncData.complete(("", false)))
   | Loading as orig | Reloading(_) as orig | Complete(_) as orig => orig
   }
 
   let sendRequest = () => {
     let username =
-      follow
-      ->AsyncData.getValue
-      ->Option.map(((username, _following)) => username)
-      ->Option.getWithDefault("")
+      follow->AsyncData.getValue->Option.map(((username, _following)) => username)->Option.getOr("")
 
     let action =
       follow
@@ -287,7 +281,7 @@ let useFollowInProfile: (
       ->Option.flatMap(((_username, following)) =>
         following ? Some(API.Action.Unfollow(username)) : None
       )
-      ->Option.getWithDefault(API.Action.Follow(username))
+      ->Option.getOr(API.Action.Follow(username))
 
     setState(_prev => follow->AsyncData.toBusy)
 
@@ -296,7 +290,7 @@ let useFollowInProfile: (
       setState(_prev =>
         switch data {
         | Ok(ok: Shape.Author.t) =>
-          AsyncData.complete((ok.username, ok.following->Option.getWithDefault(false)))
+          AsyncData.complete((ok.username, ok.following->Option.getOr(false)))
         | Error(_error) => AsyncData.complete(("", false))
         }
       )->Promise.resolve
@@ -326,13 +320,13 @@ let useFavorite = (~article: asyncArticle, ~user: option<Shape.User.t>): (
     ->Option.map((ok: Shape.Article.t) =>
       AsyncData.complete((ok.favorited, ok.favoritesCount, ok.slug))
     )
-    ->Option.getWithDefault(AsyncData.complete((false, 0, "")))
+    ->Option.getOr(AsyncData.complete((false, 0, "")))
   | Loading as orig | Reloading(_) as orig | Complete(_) as orig => orig
   }
 
   let sendRequest = () => {
     let (favorited, _favoritesCount, slug) =
-      favorite->AsyncData.getValue->Option.getWithDefault((false, 0, ""))
+      favorite->AsyncData.getValue->Option.getOr((false, 0, ""))
 
     let action = favorited ? API.Action.Unfavorite(slug) : API.Action.Favorite(slug)
 
@@ -369,10 +363,7 @@ let useDeleteArticle: (
 
   let sendRequest = () => {
     let slug =
-      article
-      ->AsyncResult.getOk
-      ->Option.map((ok: Shape.Article.t) => ok.slug)
-      ->Option.getWithDefault("")
+      article->AsyncResult.getOk->Option.map((ok: Shape.Article.t) => ok.slug)->Option.getOr("")
 
     setState(_prev => true)
 
@@ -418,11 +409,11 @@ let useToggleFavorite: (
     | Favorite(slug) | Unfavorite(slug) => slug
     }
 
-    setBusy(prev => prev->Belt.Set.String.add(_, slug))
+    setBusy(prev => prev->Belt.Set.String.add(slug))
 
     API.favoriteArticle(~action, ())
     ->Promise.then(data => {
-      setBusy(prev => prev->Belt.Set.String.remove(_, slug))
+      setBusy(prev => prev->Belt.Set.String.remove(slug))
 
       switch data {
       | Ok(_) =>
@@ -456,9 +447,7 @@ let useToggleFavorite: (
 
       ignore()->Promise.resolve
     })
-    ->Promise.catch(_error =>
-      setBusy(prev => prev->Belt.Set.String.remove(_, slug))->Promise.resolve
-    )
+    ->Promise.catch(_error => setBusy(prev => prev->Belt.Set.String.remove(slug))->Promise.resolve)
     ->ignore
   }
 
@@ -499,7 +488,7 @@ let useViewMode: (~route: Shape.Profile.viewMode) => (Shape.Profile.viewMode, in
   ~route,
 ) => {
   let (viewMode, setViewMode) = React.useState(() => None)
-  let finalViewMode = viewMode->Option.getWithDefault(route)
+  let finalViewMode = viewMode->Option.getOr(route)
 
   React.useEffect2(() => {
     setViewMode(_prev => None)
